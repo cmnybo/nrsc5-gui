@@ -20,7 +20,6 @@
 import os, sys, shutil, re, tempfile, md5, gtk, gobject, json
 from subprocess import Popen, PIPE
 from threading import Timer, Thread
-from mercurial.commands import bookmark
 
 # if nrsc5 and mpv are not in the system path, set the full path here
 nrsc5Path = "nrsc5"
