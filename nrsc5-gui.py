@@ -622,6 +622,9 @@ class NRSC5_GUI(object):
             with open("config.json", mode='r') as f:
                 config = json.load(f)
                 
+                if "Width" in config:
+                    self.mainWindow.resize(config["Width"],config["Height"])
+                
                 self.mainWindow.move(config["WindowX"], config["WindowY"])
                 self.spinFreq.set_value(config["Frequency"])
                 self.spinStream.set_value(config["Stream"])
@@ -678,9 +681,12 @@ class NRSC5_GUI(object):
         try:
             with open("config.json", mode='w') as f:
                 winX, winY = self.mainWindow.get_position()
+                width, height = self.mainWindow.get_size()
                 config = {
                     "WindowX": winX,
                     "WindowY": winY,
+                    "Width":width,
+                    "Height":height,
                     "Frequency": self.spinFreq.get_value(),
                     "Stream": int(self.spinStream.get_value()),
                     "Gain": self.spinGain.get_value(),
