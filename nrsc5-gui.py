@@ -966,7 +966,8 @@ class NRSC5_GUI(object):
             
             while (self.mapViewer.animateBusy):
                 self.debugLog("Animation Busy - Stopping")
-                self.mapViewer.animateTimer.cancel()
+                if (self.mapViewer.animateTimer is not None):
+                    self.mapViewer.animateTimer.cancel()
                 time.sleep(0.25)
         
         self.playing = False
@@ -1130,7 +1131,8 @@ class NRSC5_Map(object):
         # wait for animation to finish
         while (self.animateBusy):
             self.parent.debugLog("Waiting for animation to finish")
-            self.animateTimer.cancel()
+            if (self.animateTimer is not None):
+                self.animateTimer.cancel()
             time.sleep(0.25)
         
         self.config["windowPos"]  = self.mapWindow.get_position()                                       # store current window position
