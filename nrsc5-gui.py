@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #    NRSC5 GUI - A graphical interface for nrsc5
-#    Copyright (C) 2017  Cody Nybo
+#    Copyright (C) 2017-2018  Cody Nybo
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -262,7 +262,7 @@ class NRSC5_GUI(object):
 
         license = """
         NRSC5 GUI - A graphical interface for nrsc5
-        Copyright (C) 2017  Cody Nybo
+        Copyright (C) 2017-2018  Cody Nybo
 
         This program is free software: you can redistribute it and/or modify
         it under the terms of the GNU General Public License as published by
@@ -281,9 +281,9 @@ class NRSC5_GUI(object):
         about_dialog.set_transient_for(self.mainWindow)
         about_dialog.set_destroy_with_parent(True)
         about_dialog.set_name("NRSC5 GUI")
-        about_dialog.set_version("1.0.0")
-        about_dialog.set_copyright("Copyright \xc2\xa9 2017 Cody Nybo")
-        about_dialog.set_website("https://github.com/cmnybo")
+        about_dialog.set_version("1.0.1")
+        about_dialog.set_copyright("Copyright \xc2\xa9 2017-2018 Cody Nybo")
+        about_dialog.set_website("https://github.com/cmnybo/nrsc5-gui")
         about_dialog.set_comments("A graphical interface for nrsc5.")
         about_dialog.set_authors(authors)
         about_dialog.set_license(license)
