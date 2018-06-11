@@ -382,12 +382,16 @@ class NRSC5_GUI(object):
                 if (os.path.isfile(mapFile)):                                                           # check if map exists
                     mapImg = Image.open(mapFile).resize((200,200), Image.LANCZOS)                       # scale map to fit window
                     self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display
+                else:
+                    self.imgMap.set_from_stock(gtk.STOCK_MISSING_IMAGE, gtk.ICON_SIZE_LARGE_TOOLBAR)    # display missing image if file is not found
             
             elif (btn == self.radMapWeather):
                 self.mapData["mapMode"] = 1
                 if (os.path.isfile(self.mapData["weatherNow"])):
                     mapImg = Image.open(self.mapData["weatherNow"]).resize((200,200), Image.LANCZOS)    # scale map to fit window
                     self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display 
+                else:
+                    self.imgMap.set_from_stock(gtk.STOCK_MISSING_IMAGE, gtk.ICON_SIZE_LARGE_TOOLBAR)    # display missing image if file is not found
     
     def on_btnMap_clicked(self, btn):
         # open map viewer window
@@ -677,6 +681,7 @@ class NRSC5_GUI(object):
         from math import asinh, tan, radians
         
         # get pixel coordinates from latitude and longitude
+        # calculations taken from https://github.com/KYDronePilot/hdfm
         top  = asinh(tan(radians(52.482780)))
         lat1 = top - asinh(tan(radians(lat1)))
         lat2 = top - asinh(tan(radians(lat2)))
@@ -1073,7 +1078,7 @@ class NRSC5_Map(object):
         if (btn.get_active()):
             if (btn == self.radMapTraffic):
                 self.config["mode"] = 0
-                self.imgKey.set_visible(False)
+                self.imgKey.set_visible(False)                                                          # hide the key for the weather radar
                 
                 # stop animation if it's enabled
                 if (self.animateTimer is not None):
@@ -1084,7 +1089,7 @@ class NRSC5_Map(object):
                 
             elif (btn == self.radMapWeather):
                 self.config["mode"] = 1
-                self.imgKey.set_visible(True)
+                self.imgKey.set_visible(True)                                                          # show the key for the weather radar
                 
                 # check if animate is enabled and start animation
                 if (self.config["animate"] and self.animateTimer is None):
@@ -1140,33 +1145,18 @@ class NRSC5_Map(object):
         self.callback()                                                                                 # run the callback
     
     def animate(self):
-        # insert image from thread
-        def setImage(img):
-            gtk.threads_enter()
-            try:
-                self.imgMap.set_from_pixbuf(img)
-            finally:
-                gtk.threads_leave()
-                self.animateBusy = False
-       
         fileName = self.weatherMaps[self.mapIndex] if len(self.weatherMaps) else ""
         if (os.path.isfile(fileName)):
-            self.animateBusy = True
+            self.animateBusy = True                                                                     # set busy to true
             
-            # prepare weather map image
             if (self.config["scale"]):
                 mapImg = imgToPixbuf(Image.open(fileName).resize((600,600), Image.LANCZOS))             # open weather map, resize to 600x600, and convert to pixbuf
             else:
                 mapImg = imgToPixbuf(Image.open(fileName))                                              # open weather map and convert to pixbuf
          
-            if (self.config["animate"] and self.config["mode"] == 1):                                   # check if the viwer is set to animated weather map
-                if (self.animateStop):
-                    self.animateBusy = False
-                    return
-                
-                gobject.idle_add(setImage, mapImg)                                                      # display weather map image
+            if (self.config["animate"] and self.config["mode"] == 1 and not self.animateStop):          # check if the viwer is set to animated weather map
+                self.imgMap.set_from_pixbuf(mapImg)                                                     # display image
                 self.mapIndex += 1                                                                      # incriment image index
-                 
                 if (self.mapIndex >= len(self.weatherMaps)):                                            # check if this is the last image
                     self.mapIndex = 0                                                                   # reset the map index
                     self.animateTimer = Timer(2, self.animate)                                          # show the last image for a longer time
@@ -1176,6 +1166,8 @@ class NRSC5_Map(object):
                 self.animateTimer.start()                                                               # start the timer
             else:
                self.animateTimer = None                                                                 # clear the timer
+               
+            self.animateBusy = False                                                                    # set busy to false
         else:
             self.chkAnimate.set_active(False)                                                           # stop animation if image was not found
     
@@ -1185,6 +1177,8 @@ class NRSC5_Map(object):
             else:       mapImg = Image.open(fileName)                                                   # open map
             
             self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                            # convert image to pixbuf and display
+        else:
+            self.imgMap.set_from_stock(gtk.STOCK_MISSING_IMAGE, gtk.ICON_SIZE_LARGE_TOOLBAR)            # display missing image if file is not found
     
     def setMap(self, map):
         if (map == 0):  self.showImage(os.path.join("map", "TrafficMap.png"), False)                    # show traffic map
