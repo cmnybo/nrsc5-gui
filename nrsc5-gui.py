@@ -29,7 +29,7 @@ mpvPath   = "mpv"
 mapName   = "map.png"
 
 # print debug messages to stdout
-debugMessages = True
+debugMessages = False
 
 class NRSC5_GUI(object):
     def __init__(self):
@@ -662,7 +662,7 @@ class NRSC5_GUI(object):
                 ts = int(m.group(2))                                                                    # timestamp (UTC)
                 
                 # remove weather maps older than 12 hours
-                if ((now - ts > 60*60*12) and (f != self.mapData["weatherNow"])):
+                if (now - ts > 60*60*12):
                     try:
                         if (f in self.weatherMaps): self.weatherMaps.pop(self.weatherMaps.index(f))     # remove from list
                         os.remove(f)                                                                    # remove file
@@ -1033,7 +1033,6 @@ class NRSC5_GUI(object):
             now = datetime.datetime.now()
             print (now.strftime("%b %d %H:%M:%S : ") + message)
 
-
 class NRSC5_Map(object):
     def __init__(self, parent, callback, data):
         # setup gui
@@ -1170,6 +1169,7 @@ class NRSC5_Map(object):
             self.animateBusy = False                                                                    # set busy to false
         else:
             self.chkAnimate.set_active(False)                                                           # stop animation if image was not found
+            self.mapIndex = 0
     
     def showImage(self, fileName, scale):
         if (os.path.isfile(fileName)):

@@ -10,6 +10,7 @@ The folowing programs are required to run NRSC5-GUI
 * [PyGTK](http://www.pygtk.org/downloads.html)
 * [Python Imaging Library](http://pythonware.com/products/pil)
 * [NumPy](http://www.numpy.org)
+* [Python Dateutil](https://pypi.org/project/python-dateutil)
 * [nrsc5](https://github.com/theori-io/nrsc5)
 * [mpv](https://mpv.io/installation)
 
