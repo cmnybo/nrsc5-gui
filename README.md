@@ -78,12 +78,12 @@ If you change the map image, you will have to delete the BaseMap images in the m
 they will be recreated with the new map. 
 
 ## Screenshots
-![album art tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/experimental/screenshots/album_art_tab.png "Album Art Tab")
-![info tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/experimental/screenshots/info_tab.png "Info Tab")
-![settings tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/experimental/screenshots/settings_tab.png "Settings Tab")
+![album art tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/master/screenshots/album_art_tab.png "Album Art Tab")
+![info tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/master/screenshots/info_tab.png "Info Tab")
+![settings tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/master/screenshots/settings_tab.png "Settings Tab")
 
-![bookmarks tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/experimental/screenshots/bookmarks_tab.png "Bookmarks Tab")
-![map tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/experimental/screenshots/map_tab.png "Map Tab")
+![bookmarks tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/master/screenshots/bookmarks_tab.png "Bookmarks Tab")
+![map tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/master/screenshots/map_tab.png "Map Tab")
 
 ## Version History
 1.0.0 Initial Release  
