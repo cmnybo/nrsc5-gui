@@ -1,5 +1,6 @@
 NRSC5-GUI is a graphical interface for [nrsc5](https://github.com/theori-io/nrsc5).  
-It makes it easy to play your favorite FM HD radio stations using and RTL-SDR dongle.
+It makes it easy to play your favorite FM HD radio stations using and RTL-SDR dongle.  
+This version of NRSC5-GUI does not contain the weather radar and traffic map viewer.
 
 # Dependencies
 
@@ -54,8 +55,8 @@ The Bit Error Rate is shown in the Info tab. High BER values will cause the audi
 The average BER is also shown on the status bar.
 
 ## Screenshots
-![album art tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/master/screenshots/album_art_tab.png "Album Art Tab")
-![info tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/master/screenshots/info_tab.png "Info Tab")
+![album art tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/no-maps/screenshots/album_art_tab.png "Album Art Tab")
+![info tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/no-maps/screenshots/info_tab.png "Info Tab")
 
-![settings tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/master/screenshots/settings_tab.png "Settings Tab")
-![bookmarks tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/master/screenshots/bookmarks_tab.png "Bookmarks Tab")
+![settings tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/no-maps/screenshots/settings_tab.png "Settings Tab")
+![bookmarks tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/no-maps/screenshots/bookmarks_tab.png "Bookmarks Tab")
