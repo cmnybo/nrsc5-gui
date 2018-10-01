@@ -311,7 +311,7 @@ class NRSC5_GUI(object):
         about_dialog.set_transient_for(self.mainWindow)
         about_dialog.set_destroy_with_parent(True)
         about_dialog.set_name("NRSC5 GUI")
-        about_dialog.set_version("1.1.0")
+        about_dialog.set_version("1.1.1")
         about_dialog.set_copyright("Copyright \xc2\xa9 2017-2018 Cody Nybo")
         about_dialog.set_website("https://github.com/cmnybo/nrsc5-gui")
         about_dialog.set_comments("A graphical interface for nrsc5.")
