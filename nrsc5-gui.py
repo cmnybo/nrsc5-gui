@@ -17,11 +17,11 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, sys, shutil, re, tempfile, md5, gtk, gobject, json, datetime, ImageFont, ImageDraw, numpy, glob, time
+import os, sys, shutil, re, tempfile, md5, gtk, gobject, json, datetime, numpy, glob, time
 from subprocess import Popen, PIPE
 from threading import Timer, Thread
 from dateutil import tz
-from PIL import Image
+from PIL import Image, ImageFont, ImageDraw
 
 # if nrsc5 and mpv are not in the system path, set the full path here
 nrsc5Path = "nrsc5"
@@ -117,6 +117,13 @@ class NRSC5_GUI(object):
         if (not self.playing):
             
             self.nrsc5Args = [nrsc5Path, "-o", "-", "-f", "adts"]
+            
+            # update all of the spin buttons to prevent the text from sticking 
+            self.spinFreq.update()
+            self.spinStream.update()
+            self.spinGain.update()
+            self.spinPPM.update()
+            self.spinRTL.update()
             
             # enable aas output if temp dir was created
             if (self.aasDir is not None):
