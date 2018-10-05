@@ -311,7 +311,7 @@ class NRSC5_GUI(object):
         about_dialog.set_transient_for(self.mainWindow)
         about_dialog.set_destroy_with_parent(True)
         about_dialog.set_name("NRSC5 GUI")
-        about_dialog.set_version("1.1.1")
+        about_dialog.set_version("1.1.2")
         about_dialog.set_copyright("Copyright \xc2\xa9 2017-2018 Cody Nybo")
         about_dialog.set_website("https://github.com/cmnybo/nrsc5-gui")
         about_dialog.set_comments("A graphical interface for nrsc5.")
@@ -336,6 +336,7 @@ class NRSC5_GUI(object):
 
     def on_cbAutoGain_toggled(self, btn):
         self.spinGain.set_sensitive(not btn.get_active())
+        self.lblGain.set_visible(btn.get_active())
 
     def on_listviewBookmarks_row_activated(self, treeview, path, view_column):
         if (len(path) != 0):
@@ -461,20 +462,21 @@ class NRSC5_GUI(object):
                 self.txtAlbum.set_text(self.streamInfo["Album"])
                 self.lblBitRate.set_label("{:3.1f} kbps".format(self.streamInfo["Bitrate"]))
                 self.lblBitRate2.set_label("{:3.1f} kbps".format(self.streamInfo["Bitrate"]))
-                self.lblError.set_label("{:2.3f}% Error".format(self.streamInfo["BER"][1]*100))
-                self.lblCall.set_label(self.streamInfo["Callsign"])
+                self.lblError.set_label("{:2.2f}% Error ".format(self.streamInfo["BER"][1]*100))
+                self.lblCall.set_label(" " + self.streamInfo["Callsign"])
                 self.lblName.set_label(self.streamInfo["Callsign"])
                 self.lblSlogan.set_label(self.streamInfo["Slogan"])
                 self.lblSlogan.set_tooltip_text(self.streamInfo["Slogan"])
                 self.lblMerLower.set_label("{:1.2f} dB".format(self.streamInfo["MER"][0]))
                 self.lblMerUpper.set_label("{:1.2f} dB".format(self.streamInfo["MER"][1]))
-                self.lblBerNow.set_label("{:1.2f}% (Now)".format(ber[0]))
-                self.lblBerAvg.set_label("{:1.2f}% (Avg)".format(ber[1]))
-                self.lblBerMin.set_label("{:1.2f}% (Min)".format(ber[2]))
-                self.lblBerMax.set_label("{:1.2f}% (Max)".format(ber[3]))
+                self.lblBerNow.set_label("{:1.3f}% (Now)".format(ber[0]))
+                self.lblBerAvg.set_label("{:1.3f}% (Avg)".format(ber[1]))
+                self.lblBerMin.set_label("{:1.3f}% (Min)".format(ber[2]))
+                self.lblBerMax.set_label("{:1.3f}% (Max)".format(ber[3]))
                 
                 if (self.cbAutoGain.get_active()):
                     self.spinGain.set_value(self.streamInfo["Gain"])
+                    self.lblGain.set_label("{:2.1f}dB".format(self.streamInfo["Gain"]))
                 
                 # from what I can tell, album art is displayed if the XHDR packet is 8 bytes long
                 # and the station logo is displayed if it's 6 bytes long
@@ -853,6 +855,7 @@ class NRSC5_GUI(object):
         self.lblName       = builder.get_object("lblName")
         self.lblSlogan     = builder.get_object("lblSlogan")
         self.lblCall       = builder.get_object("lblCall")
+        self.lblGain       = builder.get_object("lblGain")
         self.lblBitRate    = builder.get_object("lblBitRate")
         self.lblBitRate2   = builder.get_object("lblBitRate2")
         self.lblError      = builder.get_object("lblError")
@@ -893,6 +896,7 @@ class NRSC5_GUI(object):
         self.lblBitRate.set_label("")
         self.lblBitRate2.set_label("")
         self.lblError.set_label("")
+        self.lblGain.set_label("")
         self.txtTitle.set_text("")
         self.txtArtist.set_text("")
         self.txtAlbum.set_text("")
