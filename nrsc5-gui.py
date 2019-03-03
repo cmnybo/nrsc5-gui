@@ -92,21 +92,21 @@ class NRSC5_GUI(object):
 
         # regex for getting nrsc5 output
         self.regex = [
-            re.compile("^.*pids\.c:[\d]+: Station Name: (.*)$"),                                                    #  0 match station name
-            re.compile("^.*pids\.c:[\d]+: Station location: (-?[\d]+\.[\d]+) (-?[\d]+\.[\d]+), ([\d]+)m$"),         #  1 match station location
-            re.compile("^.*pids\.c:[\d]+: Slogan: (.*)$"),                                                          #  2 match station slogan
-            re.compile("^.*output\.c:[\d]+: Audio bit rate: (.*) kbps$"),                                           #  3 match audio bit rate
-            re.compile("^.*output\.c:[\d]+: Title: (.*)$"),                                                         #  4 match title
-            re.compile("^.*output\.c:[\d]+: Artist: (.*)$"),                                                        #  5 match artist
-            re.compile("^.*output\.c:[\d]+: Album: (.*)$"),                                                         #  6 match album
-            re.compile("^.*output\.c:[\d]+: Received (.*\.(?:jpg|png|txt)), port ([0-9a-fA-F]+).*$"),               #  7 match file (album art, maps, weather info)
-            re.compile("^.*sync\.c:[\d]+: MER: (-?[\d]+\.[\d]+) dB \(lower\), (-?[\d]+\.[\d]+) dB \(upper\)$"),     #  8 match MER
-            re.compile("^.*decode\.c:[\d]+: BER: (0\.[\d]+), avg: (0\.[\d]+), min: (0\.[\d]+), max: (0\.[\d]+)$"),  #  9 match BER
-            re.compile("^.*main\.c:[\d]+: Best gain: (.*)$"),                                                       # 10 match gain
-            re.compile("^.*output\.c:[\d]+: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})$"), # 11 match stream
-            re.compile("^.*output\.c:[\d]+: Port ([0-9a-fA-F]+), type ([\d]+), size ([\d]+)$"),                     # 12 match port
-            re.compile("^.*output\.c:[\d]+: XHDR tag: ((?:[0-9A-Fa-f]{2} ?)+).*$"),                                 # 13 match xhdr tag
-            re.compile("^.*output\.c:[\d]+: Unique file identifier: PPC;07; ([\S]+).*$")                            # 14 match unique file id
+            re.compile("^.*main\.c:[\d]+: Station name: (.*)$"),                                                    #  0 match station name
+            re.compile("^.*main\.c:[\d]+: Station location: (-?[\d]+\.[\d]+), (-?[\d]+\.[\d]+), ([\d]+)m$"),        #  1 match station location
+            re.compile("^.*main\.c:[\d]+: Slogan: (.*)$"),                                                          #  2 match station slogan
+            re.compile("^.*main\.c:[\d]+: Audio bit rate: (.*) kbps$"),                                             #  3 match audio bit rate
+            re.compile("^.*main\.c:[\d]+: Title: (.*)$"),                                                           #  4 match title
+            re.compile("^.*main\.c:[\d]+: Artist: (.*)$"),                                                          #  5 match artist
+            re.compile("^.*main\.c:[\d]+: Album: (.*)$"),                                                           #  6 match album
+            re.compile("^.*main\.c:[\d]+: LOT file: port=([0-9a-fA-F]+) lot=([\d]+) name=(.*\.(?:jpg|png|txt)) .*$"),  #  7 match file (album art, maps, weather info)
+            re.compile("^.*main\.c:[\d]+: MER: (-?[\d]+\.[\d]+) dB \(lower\), (-?[\d]+\.[\d]+) dB \(upper\)$"),     #  8 match MER
+            re.compile("^.*main\.c:[\d]+: BER: (0\.[\d]+), avg: (0\.[\d]+), min: (0\.[\d]+), max: (0\.[\d]+)$"),    #  9 match BER
+            re.compile("^.*nrsc5\.c:[\d]+: Best gain: (.*) dB, CNR: (.*) dB$"),                                     # 10 match gain
+            re.compile("^.*main\.c:[\d]+: SIG Service: type=(audio|data) number=([\d]+) name=.*$"),                 # 11 match stream
+            re.compile("^.*main\.c:[\d]+:   Data component: id=([\d]+) port=([0-9a-fA-F]+) .*$"),                   # 12 match port
+            re.compile("^.*main\.c:[\d]+: XHDR: ([\d]+) ([0-9a-fA-F]{8}) (-?[\d]+)$"),                              # 13 match xhdr tag
+            re.compile("^.*main\.c:[\d]+: Unique file identifier: PPC;07; ([\S]+).*$")                              # 14 match unique file id
         ]
 
         self.loadSettings()
@@ -116,7 +116,7 @@ class NRSC5_GUI(object):
         # start playback
         if (not self.playing):
 
-            self.nrsc5Args = [nrsc5Path, "-o", "-", "-f", "adts"]
+            self.nrsc5Args = [nrsc5Path, "-o", "-"]
 
             # update all of the spin buttons to prevent the text from sticking
             self.spinFreq.update()
@@ -134,7 +134,7 @@ class NRSC5_GUI(object):
             if (not self.cbAutoGain.get_active()):
                 self.streamInfo["Gain"] = self.spinGain.get_value()
                 self.nrsc5Args.append("-g")
-                self.nrsc5Args.append(str(int(self.streamInfo["Gain"]*10)))
+                self.nrsc5Args.append(str(self.streamInfo["Gain"]))
 
             # set ppm error if not zero
             if (self.spinPPM.get_value() != 0):
@@ -478,12 +478,10 @@ class NRSC5_GUI(object):
                     self.spinGain.set_value(self.streamInfo["Gain"])
                     self.lblGain.set_label("{:2.1f}dB".format(self.streamInfo["Gain"]))
 
-                # from what I can tell, album art is displayed if the XHDR packet is 8 bytes long
-                # and the station logo is displayed if it's 6 bytes long
-                if (len(self.lastXHDR.split(' ')) == 8):
+                if (self.lastXHDR == 0):
                     imagePath = os.path.join(self.aasDir, self.streamInfo["Cover"])
                     image = self.streamInfo["Cover"]
-                elif (len(self.lastXHDR.split(' ')) == 6):
+                elif (self.lastXHDR == 1):
                     imagePath = os.path.join(self.aasDir, self.streamInfo["Logo"])
                     image = self.streamInfo["Logo"]
                     if (not os.path.isfile(imagePath)):
@@ -505,7 +503,7 @@ class NRSC5_GUI(object):
             self.statusTimer = Timer(1, self.checkStatus)
             self.statusTimer.start()
 
-    def processTrafficMap(self, fileName):
+    def processTrafficMap(self, fileName, storedFileName):
         r = re.compile("^TMT_.*_([1-3])_([1-3])_([\d]{4})([\d]{2})([\d]{2})_([\d]{2})([\d]{2}).*$")     # match file name
         m = r.match(fileName)
 
@@ -521,7 +519,7 @@ class NRSC5_GUI(object):
             # check if the tile has already been loaded
             if (self.mapData["mapTiles"][x][y] == ts):
                 try:
-                    os.remove(os.path.join("aas", fileName))                                            # delete this tile, it's not needed
+                    os.remove(os.path.join("aas", storedFileName))                                      # delete this tile, it's not needed
                 except:
                     pass
                 return                                                                                  # no need to recreate the map if it hasn't changed
@@ -532,7 +530,7 @@ class NRSC5_GUI(object):
             self.mapData["mapTiles"][x][y] = ts                                                         # store time for current tile
 
             try:
-                currentPath = os.path.join("aas", fileName)                                             # create path to map tile
+                currentPath = os.path.join("aas", storedFileName)                                       # create path to map tile
                 newPath = os.path.join("map", "TrafficMap_{:g}_{:g}.png".format(x,y))                   # create path to new tile location
                 if(os.path.exists(newPath)): os.remove(newPath)                                         # delete old image if it exists (only necessary on windows)
                 shutil.move(currentPath, newPath)                                                       # move and rename map tile
@@ -562,7 +560,7 @@ class NRSC5_GUI(object):
 
                 if (self.mapViewer is not None): self.mapViewer.updated(0)                              # notify map viwerer if it's open
 
-    def processWeatherOverlay(self, fileName):
+    def processWeatherOverlay(self, fileName, storedFileName):
         r = re.compile("^DWRO_(.*)_.*_([\d]{4})([\d]{2})([\d]{2})_([\d]{2})([\d]{2}).*$")                    # match file name
         m = r.match(fileName)
 
@@ -579,7 +577,7 @@ class NRSC5_GUI(object):
 
             if (self.mapData["weatherTime"] == ts):
                 try:
-                    os.remove(os.path.join("aas", fileName))                                            # delete this tile, it's not needed
+                    os.remove(os.path.join("aas", storedFileName))                                      # delete this tile, it's not needed
                 except:
                     pass
                 return                                                                                  # no need to recreate the map if it hasn't changed
@@ -593,7 +591,7 @@ class NRSC5_GUI(object):
             # move new overlay to map directory
             try:
                 if(os.path.exists(wxOlPath)): os.remove(wxOlPath)                                       # delete old image if it exists (only necessary on windows)
-                shutil.move(os.path.join("aas", fileName), wxOlPath)                                    # move and rename map tile
+                shutil.move(os.path.join("aas", storedFileName), wxOlPath)                              # move and rename map tile
             except:
                 self.debugLog("Error moving weather overlay", True)
                 self.mapData["weatherTime"] = 0
@@ -627,12 +625,12 @@ class NRSC5_GUI(object):
                 self.debugLog("Error creating weather map", True)
                 self.mapData["weatherTime"] = 0
 
-    def proccessWeatherInfo(self, fileName):
+    def proccessWeatherInfo(self, fileName, storedFileName):
         weatherID = None
         weatherPos = None
 
         try:
-            with open(os.path.join("aas", fileName)) as weatherInfo:                                    # open weather info file
+            with open(os.path.join("aas", storedFileName)) as weatherInfo:                              # open weather info file
                 for line in weatherInfo:                                                                # read line by line
                     if ("DWR_Area_ID=" in line):                                                        # look for line with "DWR_Area_ID=" in it
                         # get ID from line
@@ -762,32 +760,34 @@ class NRSC5_GUI(object):
         elif (self.regex[13].match(line)):
             # match xhdr
             m = self.regex[13].match(line)
-            xhdr = m.group(1)
+            xhdr = int(m.group(1))
             if (xhdr != self.lastXHDR):
                 self.lastXHDR = xhdr
                 self.xhdrChanged = True
-                self.debugLog("XHDR Changed: {:s}".format(xhdr))
+                self.debugLog("XHDR Changed: {}".format(xhdr))
         elif (self.regex[7].match(line)):
             # match album art
             m = self.regex[7].match(line)
             if (m):
-                fileName = m.group(1)
+                fileName = m.group(3)
+                lot = m.group(2)
+                storedFileName = lot + "_" + fileName
                 fileExt  = os.path.splitext(fileName)[1]
-                p = int(m.group(2), 16)
+                p = int(m.group(1), 16)
 
                 if (p == self.streams[int(self.spinStream.get_value()-1)][0]):
-                    self.streamInfo["Cover"] = m.group(1)
-                    self.debugLog("Got Album Cover: " + fileName)
+                    self.streamInfo["Cover"] = storedFileName
+                    self.debugLog("Got Album Cover: " + storedFileName)
                 elif (p == self.streams[int(self.spinStream.get_value()-1)][1]):
-                    self.streamInfo["Logo"] = fileName
-                    self.stationLogos[self.stationStr][self.stationNum] = fileName    # add station logo to database
-                    self.debugLog("Got Station Logo: " + fileName)
+                    self.streamInfo["Logo"] = storedFileName
+                    self.stationLogos[self.stationStr][self.stationNum] = storedFileName    # add station logo to database
+                    self.debugLog("Got Station Logo: " + storedFileName)
                 elif(fileName[0:5] == "DWRO_" and self.mapDir is not None):
-                    self.processWeatherOverlay(m.group(1))
+                    self.processWeatherOverlay(fileName, storedFileName)
                 elif(fileName[0:4] == "TMT_" and self.mapDir is not None):
-                    self.processTrafficMap(m.group(1))                                  # proccess traffic map tile
+                    self.processTrafficMap(fileName, storedFileName)                                  # proccess traffic map tile
                 elif(fileName[0:5] == "DWRI_" and self.mapDir is not None):
-                    self.proccessWeatherInfo(m.group(1))
+                    self.proccessWeatherInfo(fileName, storedFileName)
 
         elif (self.regex[0].match(line)):
             # match station name
@@ -800,24 +800,24 @@ class NRSC5_GUI(object):
         elif (self.regex[10].match(line)):
             # match gain
             m = self.regex[10].match(line)
-            self.streamInfo["Gain"] = float(m.group(1))/10
+            self.streamInfo["Gain"] = float(m.group(1))
         elif (self.regex[11].match(line)):
             # match stream
             m = self.regex[11].match(line)
-            t = int(m.group(1), 16) # stream type
+            t = m.group(1) # stream type
             s = int(m.group(2), 16) # stream number
 
-            self.debugLog("Found Stream: Type {:02X}, Number {:02X}". format(t, s))
+            self.debugLog("Found Stream: Type {}, Number {:02X}". format(t, s))
             self.lastType = t
-            if (t == 0x40 and s >= 1 and s <= 4):
+            if (t == "audio" and s >= 1 and s <= 4):
                 self.numStreams = s
         elif (self.regex[12].match(line)):
             # match port
             m = self.regex[12].match(line)
-            p = int(m.group(1), 16)
-            self.debugLog("\tFound Port: {:03X}". format(p))
+            p = int(m.group(2), 16)
+            self.debugLog("\tFound Port: {:04X}". format(p))
 
-            if (self.lastType == 0x40 and self.numStreams > 0):
+            if (self.lastType == "audio" and self.numStreams > 0):
                 self.streams[self.numStreams-1].append(p)
 
     def getControls(self):
