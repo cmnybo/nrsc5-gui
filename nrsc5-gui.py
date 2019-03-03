@@ -17,7 +17,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, sys, shutil, re, tempfile, md5, gtk, gobject, json, datetime, numpy, glob, time
+import os, sys, shutil, re, gtk, gobject, json, datetime, numpy, glob, time
 from subprocess import Popen, PIPE
 from threading import Timer, Thread
 from dateutil import tz
