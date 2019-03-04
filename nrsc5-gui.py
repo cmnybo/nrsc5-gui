@@ -37,9 +37,8 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GObject, Gdk, GdkPixbuf
 
 
-# if nrsc5 and mpv are not in the system path, set the full path here
+# if nrsc5 is not in the system path, set the full path here
 nrsc5Path = "nrsc5"
-mpvPath = "mpv"
 mapName = "map.png"
 
 # print debug messages to stdout
@@ -54,7 +53,6 @@ class NRSC5_GUI(object):
         self.initStreamInfo()           # initilize stream info and clear status widgets
 
         self.nrsc5          = None      # nrsc5 process
-        self.mpv            = None      # mpv process
         self.playerThread   = None      # player thread
         self.playing        = False     # currently playing
         self.statusTimer    = None      # status update timer
@@ -131,7 +129,7 @@ class NRSC5_GUI(object):
         # start playback
         if not self.playing:
 
-            self.nrsc5Args = [nrsc5Path, "-o", "-"]
+            self.nrsc5Args = [nrsc5Path]
 
             # update all of the spin buttons to prevent the text from sticking
             self.spinFreq.update()
@@ -220,10 +218,6 @@ class NRSC5_GUI(object):
             # shutdown nrsc5
             if self.nrsc5 is not None and not self.nrsc5.poll():
                 self.nrsc5.terminate()
-
-            # shutdown mpv
-            if self.mpv is not None and not self.mpv.poll():
-                self.mpv.terminate()
 
             if self.playerThread is not None:
                 self.playerThread.join(1)
@@ -430,11 +424,8 @@ class NRSC5_GUI(object):
     def play(self):
         FNULL = open(os.devnull, "w")
 
-        # run nrsc5 and output stdout & stderr to pipes
-        self.nrsc5 = Popen(self.nrsc5Args, stderr=PIPE, stdout=PIPE, universal_newlines=True)
-
-        # run mpv and read from stdin & output to /dev/null
-        self.mpv = Popen([mpvPath, "-"], stdin=self.nrsc5.stdout, stderr=FNULL, stdout=FNULL)
+        # run nrsc5 and output stderr to pipe
+        self.nrsc5 = Popen(self.nrsc5Args, stderr=PIPE, universal_newlines=True)
 
         while True:
             # read output from nrsc5
@@ -447,23 +438,16 @@ class NRSC5_GUI(object):
                 self.logFile.write(output)
                 self.logFile.flush()
 
-            # check if nrsc5 or mpv has exited
+            # check if nrsc5 has exited
             if self.nrsc5.poll() and not self.playing:
                 # cleanup if shutdown
                 self.debugLog("Process Terminated")
-                self.mpv = None
                 self.nrsc5 = None
                 break
             elif self.nrsc5.poll() and self.playing:
-                # restart nrsc5 and mpv if nrsc5 crashes
+                # restart nrsc5 if it crashes
                 self.debugLog("Restarting NRSC5")
-                self.nrsc5 = Popen(self.nrsc5Args, stderr=PIPE, stdout=PIPE, universal_newlines=True)
-                self.mpv.kill()
-                self.mpv = Popen([mpvPath, "-"], stdin=self.nrsc5.stdout, stderr=FNULL, stdout=FNULL)
-            elif self.mpv.poll() and self.playing:
-                # restart mpv if it crashes
-                self.debugLog("Restarting MPV")
-                self.mpv = Popen([mpvPath, "-"], stdin=self.nrsc5.stdout, stderr=FNULL, stdout=FNULL)
+                self.nrsc5 = Popen(self.nrsc5Args, stderr=PIPE, universal_newlines=True)
 
     def checkStatus(self):
         # update status information
@@ -1013,10 +997,6 @@ class NRSC5_GUI(object):
         # kill nrsc5 if it's running
         if self.nrsc5 is not None and not self.nrsc5.poll():
             self.nrsc5.kill()
-
-        # kill mpv if it's running
-        if self.mpv is not None and not self.mpv.poll():
-            self.mpv.kill()
 
         # shut down status timer if it's running
         if self.statusTimer is not None:
