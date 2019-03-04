@@ -6,27 +6,24 @@ It will also display weather radar and traffic maps if the radio station provide
 
 The folowing programs are required to run NRSC5-GUI
 
-* [Python 2.7.x](https://www.python.org/downloads/release)
-* [PyGTK](http://www.pygtk.org/downloads.html)
-* [Python Imaging Library](http://pythonware.com/products/pil)
-* [NumPy](http://www.numpy.org)
+* [Python 3](https://www.python.org/downloads/release)
+* [PyGObject](https://pygobject.readthedocs.io/en/latest/)
+* [Pillow](https://pillow.readthedocs.io/en/stable/)
 * [Python Dateutil](https://pypi.org/project/python-dateutil)
 * [nrsc5](https://github.com/theori-io/nrsc5)
-* [mpv](https://mpv.io/installation)
 
 
 # Setup
-1. Install the latest version of Python 2.7, PyGTK, Python Imaging Library, and NumPy.
+1. Install the latest version of Python 3, PyGObject, Pillow.
 2. Compile and install nrsc5.
-3. Install mpv.
-4. Install nrsc5-gui files in a directory where you have write permissions.
+3. Install nrsc5-gui files in a directory where you have write permissions.
 
 The configuration files will be created in the same directory as nrsc5-gui.py.
-an aas directory will be created for downloaded files and a map directory will be created to
+An aas directory will be created for downloaded files and a map directory will be created to
 store weather & traffic maps in.
 
-nrsc5 and mpv should be installed in a directory that is in your `$PATH` environmental variable.  
-Otherwise you can edit lines 27 & 28 of nrsc5-gui.py to provide a full path to nrsc5 and mpv.  
+nrsc5 should be installed in a directory that is in your `$PATH` environment variable.  
+Otherwise you can edit line 41 of nrsc5-gui.py to provide a full path to nrsc5.
 
 # Usage
 Open the Settings tab and enter the frequency in MHz of the station you want to play.  
@@ -38,7 +35,7 @@ Log to file can be enabled to write the debug information from nrsc5 to nrsc5.lo
 
 After setting your station, click the play button to start playing the station.  
 It will take about 10 seconds to begin playing if the signal stregth is good.  
-Note: The settings cannot be changed while playing. 
+Note: The settings cannot be changed while playing.
 
 ## Album Art & Track Info
 Some stations will send album art and station logos. These will be displayed in the Album Art tab if available.  
@@ -61,7 +58,7 @@ The Bit Error Rate is shown in the Info tab. High BER values will cause the audi
 The average BER is also shown on the status bar.
 
 ## Maps
-When listening to radio stations operated by [iHeartMedia](http://iheartmedia.com/iheartmedia/stations),
+When listening to radio stations operated by [iHeartMedia](https://iheartmedia.com/iheartmedia/stations),
 you can view live traffic maps and weather radar. The maps are typically sent every few minutes and
 will be displayed once loaded.  
 Clicking the Map Viewer button on the toolbar will open a larger window to view the maps at full size.  
@@ -75,7 +72,7 @@ You can replace the map.png image with a map from any website that will let you 
 The tiles used are (35,84) to (81,110) at zoom level 8. The image is 12032x6912 pixels.  
 The portion of the map used for your area is cached in the map directory.
 If you change the map image, you will have to delete the BaseMap images in the map directory so
-they will be recreated with the new map. 
+they will be recreated with the new map.
 
 ## Screenshots
 ![album art tab](https://raw.githubusercontent.com/cmnybo/nrsc5-gui/master/screenshots/album_art_tab.png "Album Art Tab")
