@@ -33,7 +33,7 @@ import tempfile
 import time
 
 import gi
-gi.require_version('Gtk', '3.0')
+gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GObject, Gdk, GdkPixbuf
 
 
@@ -428,7 +428,7 @@ class NRSC5_GUI(object):
         self.mapViewer = None
 
     def play(self):
-        FNULL = open(os.devnull, 'w')
+        FNULL = open(os.devnull, "w")
 
         # run nrsc5 and output stdout & stderr to pipes
         self.nrsc5 = Popen(self.nrsc5Args, stderr=PIPE, stdout=PIPE, universal_newlines=True)
@@ -936,14 +936,14 @@ class NRSC5_GUI(object):
     def loadSettings(self):
         # load station logos
         try:
-            with open("stationLogos.json", mode='r') as f:
+            with open("stationLogos.json", mode="r") as f:
                 self.stationLogos = json.load(f)
         except:
             self.debugLog("Error: Unable to load station logo database", True)
 
         # load settings
         try:
-            with open("config.json", mode='r') as f:
+            with open("config.json", mode="r") as f:
                 config = json.load(f)
 
                 if "MapData" in config:
@@ -992,7 +992,7 @@ class NRSC5_GUI(object):
 
         # open log file
         try:
-            self.logFile = open("nrsc5.log", mode='a')
+            self.logFile = open("nrsc5.log", mode="a")
         except:
             self.debugLog("Error: Unable to create log file", True)
 
@@ -1032,7 +1032,7 @@ class NRSC5_GUI(object):
 
         # save settings
         try:
-            with open("config.json", mode='w') as f:
+            with open("config.json", mode="w") as f:
                 winX, winY = self.mainWindow.get_position()
                 width, height = self.mainWindow.get_size()
                 config = {
@@ -1056,7 +1056,7 @@ class NRSC5_GUI(object):
 
                 json.dump(config, f, indent=2)
 
-            with open("stationLogos.json", mode='w') as f:
+            with open("stationLogos.json", mode="w") as f:
                 json.dump(self.stationLogos, f, indent=2)
         except:
             self.debugLog("Error: Unable to save config", True)
