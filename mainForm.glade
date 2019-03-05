@@ -718,39 +718,6 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkCheckButton" id="cbLog">
-                            <property name="label" translatable="yes">Enable</property>
-                            <property name="use_action_appearance">False</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">False</property>
-                            <property name="tooltip_text" translatable="yes">Enable Logging of NRSC5 to Disk</property>
-                            <property name="draw_indicator">True</property>
-                          </object>
-                          <packing>
-                            <property name="left_attach">1</property>
-                            <property name="right_attach">3</property>
-                            <property name="top_attach">3</property>
-                            <property name="bottom_attach">4</property>
-                            <property name="y_options">GTK_FILL</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="lblGain3">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="xpad">10</property>
-                            <property name="label" translatable="yes">Log to File</property>
-                            <property name="xalign">0</property>
-                          </object>
-                          <packing>
-                            <property name="top_attach">3</property>
-                            <property name="bottom_attach">4</property>
-                            <property name="x_options">GTK_FILL</property>
-                            <property name="y_options">GTK_FILL</property>
-                          </packing>
-                        </child>
-                        <child>
                           <object class="GtkLabel" id="lblGain4">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
@@ -800,6 +767,12 @@
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
+                        </child>
+                        <child>
+                          <placeholder/>
+                        </child>
+                        <child>
+                          <placeholder/>
                         </child>
                       </object>
                     </child>

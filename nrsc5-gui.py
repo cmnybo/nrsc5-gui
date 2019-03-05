@@ -790,7 +790,6 @@ class NRSC5_GUI(object):
         self.spinPPM       = builder.get_object("spinPPM")
         self.spinRTL       = builder.get_object("spinRTL")
         self.cbAutoGain    = builder.get_object("cbAutoGain")
-        self.cbLog         = builder.get_object("cbLog")
         self.btnPlay       = builder.get_object("btnPlay")
         self.btnStop       = builder.get_object("btnStop")
         self.btnBookmark   = builder.get_object("btnBookmark")
@@ -890,7 +889,6 @@ class NRSC5_GUI(object):
                 self.cbAutoGain.set_active(config["AutoGain"])
                 self.spinPPM.set_value(config["PPMError"])
                 self.spinRTL.set_value(config["RTL"])
-                self.cbLog.set_active(config["LogToFile"])
                 self.bookmarks = config["Bookmarks"]
                 for bookmark in self.bookmarks:
                     self.lsBookmarks.append(bookmark)
@@ -959,7 +957,6 @@ class NRSC5_GUI(object):
                     "AutoGain"  : self.cbAutoGain.get_active(),
                     "PPMError"  : int(self.spinPPM.get_value()),
                     "RTL"       : int(self.spinRTL.get_value()),
-                    "LogToFile" : self.cbLog.get_active(),
                     "Bookmarks" : self.bookmarks,
                     "MapData"   : self.mapData,
                 }
