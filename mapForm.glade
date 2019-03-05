@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.22.1 -->
 <interface>
-  <requires lib="gtk+" version="2.24"/>
-  <!-- interface-naming-policy project-wide -->
+  <requires lib="gtk+" version="3.0"/>
   <object class="GtkAdjustment" id="adjSpeed">
     <property name="lower">0.10000000000000001</property>
     <property name="upper">2</property>
@@ -13,6 +13,9 @@
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Map Viewer</property>
     <property name="destroy_with_parent">True</property>
+    <child>
+      <placeholder/>
+    </child>
     <child>
       <object class="GtkTable" id="table1">
         <property name="visible">True</property>
@@ -37,8 +40,6 @@
                   <object class="GtkScrolledWindow" id="scrolledwindow1">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="hscrollbar_policy">automatic</property>
-                    <property name="vscrollbar_policy">automatic</property>
                     <child>
                       <object class="GtkViewport" id="viewport1">
                         <property name="visible">True</property>
@@ -89,11 +90,11 @@
                     <child>
                       <object class="GtkRadioButton" id="radMapWeather">
                         <property name="label" translatable="yes">Weather Radar</property>
+                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">False</property>
                         <property name="tooltip_text" translatable="yes">Display Weather Radar</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="active">True</property>
                         <property name="draw_indicator">True</property>
                         <signal name="toggled" handler="on_radMap_toggled" swapped="no"/>
@@ -107,11 +108,11 @@
                     <child>
                       <object class="GtkRadioButton" id="radMapTraffic">
                         <property name="label" translatable="yes">Traffic Map</property>
+                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">False</property>
                         <property name="tooltip_text" translatable="yes">Display Traffic Map</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="draw_indicator">True</property>
                         <property name="group">radMapWeather</property>
                         <signal name="toggled" handler="on_radMap_toggled" swapped="no"/>
@@ -127,11 +128,11 @@
                     <child>
                       <object class="GtkCheckButton" id="chkAnimate">
                         <property name="label" translatable="yes">Animate Radar</property>
+                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">False</property>
                         <property name="tooltip_text" translatable="yes">Play the animated radar</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="draw_indicator">True</property>
                         <signal name="toggled" handler="on_chkAnimate_toggled" swapped="no"/>
                       </object>
@@ -146,11 +147,11 @@
                     <child>
                       <object class="GtkCheckButton" id="chkScale">
                         <property name="label" translatable="yes">Scale Radar</property>
+                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">False</property>
                         <property name="tooltip_text" translatable="yes">Scale radar to 600x600 px</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="active">True</property>
                         <property name="draw_indicator">True</property>
                         <signal name="toggled" handler="on_chkScale_toggled" swapped="no"/>
@@ -171,8 +172,6 @@
                         <property name="invisible_char">●</property>
                         <property name="primary_icon_activatable">False</property>
                         <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                         <property name="adjustment">adjSpeed</property>
                         <property name="digits">2</property>
                         <signal name="value-changed" handler="on_spnSpeed_value_changed" swapped="no"/>
@@ -188,9 +187,9 @@
                       <object class="GtkLabel" id="label3">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="xalign">0</property>
                         <property name="xpad">5</property>
                         <property name="label" translatable="yes">Animation Speed</property>
+                        <property name="xalign">0</property>
                       </object>
                       <packing>
                         <property name="top_attach">7</property>
