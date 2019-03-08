@@ -17,19 +17,22 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, sys, shutil, re, tempfile, md5, gtk, gobject, json, datetime, numpy, glob, time
+#    Updated by zefie for modern nrsc5 ~ 2019
+
+import os, sys, shutil, re, tempfile, md5, gtk, gobject, json, datetime, numpy, glob, time, fnmatch
 from subprocess import Popen, PIPE
 from threading import Timer, Thread
 from dateutil import tz
 from PIL import Image, ImageFont, ImageDraw
 
-# if nrsc5 and mpv are not in the system path, set the full path here
+# if nrsc5 and sox are not in the system path, set the full path here
 nrsc5Path = "nrsc5"
-mpvPath   = "mpv"
+soxPath   = "play"
 mapName   = "map.png"
 
-# print debug messages to stdout
-debugMessages = False
+# print debug messages to stdout (if debugger is attached)
+debugMessages = (sys.gettrace() != None)
+debugAutoStart = True
 
 class NRSC5_GUI(object):
     def __init__(self):
@@ -37,9 +40,10 @@ class NRSC5_GUI(object):
         
         self.getControls()              # get controls and windows
         self.initStreamInfo()           # initilize stream info and clear status widgets
-        
+        self.aasDir         = os.path.join(sys.path[0], "aas")    # aas file directory
+        self.mapDir         = os.path.join(sys.path[0], "map")    # map file directory
         self.nrsc5          = None      # nrsc5 process
-        self.mpv            = None      # mpv process
+        self.sox            = None      # sox process
         self.playerThread   = None      # player thread
         self.playing        = False     # currently playing
         self.statusTimer    = None      # status update timer
@@ -56,6 +60,8 @@ class NRSC5_GUI(object):
         self.bookmarked     = False     # is current station bookmarked
         self.mapViewer      = None      # map viewer window
         self.weatherMaps    = []        # list of current weathermaps sorted by time
+        self.waittime       = 10        # time in seconds to wait for file to exist
+        self.waitdivider    = 4         # check this many times per second for file
         self.mapData        = {
             "mapMode"       : 1,
             "mapTiles"      : [[0,0,0],[0,0,0],[0,0,0]],
@@ -92,31 +98,31 @@ class NRSC5_GUI(object):
         
         # regex for getting nrsc5 output
         self.regex = [
-            re.compile("^.*pids\.c:[\d]+: Station Name: (.*)$"),                                                    #  0 match station name
-            re.compile("^.*pids\.c:[\d]+: Station location: (-?[\d]+\.[\d]+) (-?[\d]+\.[\d]+), ([\d]+)m$"),         #  1 match station location
-            re.compile("^.*pids\.c:[\d]+: Slogan: (.*)$"),                                                          #  2 match station slogan
-            re.compile("^.*output\.c:[\d]+: Audio bit rate: (.*) kbps$"),                                           #  3 match audio bit rate
-            re.compile("^.*output\.c:[\d]+: Title: (.*)$"),                                                         #  4 match title
-            re.compile("^.*output\.c:[\d]+: Artist: (.*)$"),                                                        #  5 match artist
-            re.compile("^.*output\.c:[\d]+: Album: (.*)$"),                                                         #  6 match album
-            re.compile("^.*output\.c:[\d]+: Received (.*\.(?:jpg|png|txt)), port ([0-9a-fA-F]+).*$"),               #  7 match file (album art, maps, weather info)
-            re.compile("^.*sync\.c:[\d]+: MER: (-?[\d]+\.[\d]+) dB \(lower\), (-?[\d]+\.[\d]+) dB \(upper\)$"),     #  8 match MER
-            re.compile("^.*decode\.c:[\d]+: BER: (0\.[\d]+), avg: (0\.[\d]+), min: (0\.[\d]+), max: (0\.[\d]+)$"),  #  9 match BER
-            re.compile("^.*main\.c:[\d]+: Best gain: (.*)$"),                                                       # 10 match gain
-            re.compile("^.*output\.c:[\d]+: ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2}) ([0-9a-fA-F]{2})$"), # 11 match stream
-            re.compile("^.*output\.c:[\d]+: Port ([0-9a-fA-F]+), type ([\d]+), size ([\d]+)$"),                     # 12 match port
-            re.compile("^.*output\.c:[\d]+: XHDR tag: ((?:[0-9A-Fa-f]{2} ?)+).*$"),                                 # 13 match xhdr tag
-            re.compile("^.*output\.c:[\d]+: Unique file identifier: PPC;07; ([\S]+).*$")                            # 14 match unique file id
+            re.compile("^.*main\.c:[\d]+: Station name: (.*)$"),                                                    #  0 match station name
+            re.compile("^.*main\.c:[\d]+: Station location: (-?[\d]+\.[\d]+) (-?[\d]+\.[\d]+), ([\d]+)m$"),         #  1 match station location
+            re.compile("^.*main\.c:[\d]+: Slogan: (.*)$"),                                                          #  2 match station slogan
+            re.compile("^.*main\.c:[\d]+: Audio bit rate: (.*) kbps$"),                                           #  3 match audio bit rate
+            re.compile("^.*main\.c:[\d]+: Title: (.*)$"),                                                         #  4 match title
+            re.compile("^.*main\.c:[\d]+: Artist: (.*)$"),                                                        #  5 match artist
+            re.compile("^.*main\.c:[\d]+: Album: (.*)$"),                                                         #  6 match album
+            re.compile("^.*output\.c:[\d]+: File (.*\.(?:jpg|png|txt)),.*port ([0-9a-fA-F]+).*$"),               #  7 match file (album art, maps, weather info)
+            re.compile("^.*main\.c:[\d]+: MER: (-?[\d]+\.[\d]+) dB \(lower\), (-?[\d]+\.[\d]+) dB \(upper\)$"),     #  8 match MER
+            re.compile("^.*main\.c:[\d]+: BER: (0\.[\d]+), avg: (0\.[\d]+), min: (0\.[\d]+), max: (0\.[\d]+)$"),  #  9 match BER
+            re.compile("^.*nrsc5\.c:[\d]+: Best gain: (.*) dB,.*$"),                                                       # 10 match gain
+            re.compile("^.*main\.c:[\d]+: SIG Service: type=(.*) number=(.*) name=(.*)$"), # 11 match stream
+            re.compile("^.*main\.c:[\d]+: .*Data component:.* port=([\d]+).* type=([\d]+) .*$"),                     # 12 match port
+            re.compile("^.*main\.c:[\d]+: XHDR: .* ([0-9A-Fa-f]{8}) .*$"),                                 # 13 match xhdr tag
+            re.compile("^.*main\.c:[\d]+: Unique file identifier: PPC;07; ([\S]+).*$")                            # 14 match unique file id
         ]
         
         self.loadSettings()
         self.proccessWeatherMaps()
-    
+
     def on_btnPlay_clicked(self, btn):
         # start playback
         if (not self.playing):
             
-            self.nrsc5Args = [nrsc5Path, "-o", "-", "-f", "adts"]
+            self.nrsc5Args = [nrsc5Path, "-o", "-"]
             
             # update all of the spin buttons to prevent the text from sticking 
             self.spinFreq.update()
@@ -206,9 +212,9 @@ class NRSC5_GUI(object):
             if (self.nrsc5 is not None and not self.nrsc5.poll()):
                 self.nrsc5.terminate()
             
-            # shutdown mpv
-            if (self.mpv is not None and not self.mpv.poll()):
-                self.mpv.terminate()
+            # shutdown sox
+            if (self.sox is not None and not self.sox.poll()):
+                self.sox.terminate()
             
             if (self.playerThread is not None):
                 self.playerThread.join(1)
@@ -311,9 +317,9 @@ class NRSC5_GUI(object):
         about_dialog.set_transient_for(self.mainWindow)
         about_dialog.set_destroy_with_parent(True)
         about_dialog.set_name("NRSC5 GUI")
-        about_dialog.set_version("1.1.2")
-        about_dialog.set_copyright("Copyright \xc2\xa9 2017-2018 Cody Nybo")
-        about_dialog.set_website("https://github.com/cmnybo/nrsc5-gui")
+        about_dialog.set_version("1.2.0")
+        about_dialog.set_copyright("Copyright \xc2\xa9 2017-2018 Cody Nybo, 2019 zefie")
+        about_dialog.set_website("https://github.com/zefie/nrsc5-gui")
         about_dialog.set_comments("A graphical interface for nrsc5.")
         about_dialog.set_authors(authors)
         about_dialog.set_license(license)
@@ -386,7 +392,7 @@ class NRSC5_GUI(object):
         if (btn.get_active()):
             if (btn == self.radMapTraffic):
                 self.mapData["mapMode"] = 0
-                mapFile = os.path.join("map", "TrafficMap.png")
+                mapFile = os.path.join(self.mapDir, "TrafficMap.png")
                 if (os.path.isfile(mapFile)):                                                           # check if map exists
                     mapImg = Image.open(mapFile).resize((200,200), Image.LANCZOS)                       # scale map to fit window
                     self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display
@@ -417,8 +423,8 @@ class NRSC5_GUI(object):
         # run nrsc5 and output stdout & stderr to pipes
         self.nrsc5 = Popen(self.nrsc5Args, stderr=PIPE, stdout=PIPE, universal_newlines=True)
         
-        # run mpv and read from stdin & output to /dev/null
-        self.mpv = Popen([mpvPath, "-"], stdin=self.nrsc5.stdout, stderr=FNULL, stdout=FNULL)
+        # run sox and read from stdin & output to /dev/null
+        self.sox = Popen([soxPath, "-q -t wav -"], stdin=self.nrsc5.stdout, stderr=FNULL, stdout=FNULL)
         
         while True:
             # read output from nrsc5
@@ -431,23 +437,23 @@ class NRSC5_GUI(object):
                 self.logFile.write(output)
                 self.logFile.flush()
             
-            # check if nrsc5 or mpv has exited
+            # check if nrsc5 or sox has exited
             if (self.nrsc5.poll() and not self.playing):
                 # cleanup if shutdown
                 self.debugLog("Process Terminated")
-                self.mpv = None
+                self.sox = None
                 self.nrsc5 = None
                 break
             elif (self.nrsc5.poll() and self.playing):
-                # restart nrsc5 and mpv if nrsc5 crashes
+                # restart nrsc5 and sox if nrsc5 crashes
                 self.debugLog("Restarting NRSC5")
                 self.nrsc5 = Popen(self.nrsc5Args, stderr=PIPE, stdout=PIPE, universal_newlines=True)
-                self.mpv.kill()
-                self.mpv = Popen([mpvPath, "-"], stdin=self.nrsc5.stdout, stderr=FNULL, stdout=FNULL)
-            elif (self.mpv.poll() and self.playing):
-                # restart mpv if it crashes
-                self.debugLog("Restarting MPV")
-                self.mpv = Popen([mpvPath, "-"], stdin=self.nrsc5.stdout, stderr=FNULL, stdout=FNULL)
+                self.sox.kill()
+                self.sox = Popen([soxPath, "-"], stdin=self.nrsc5.stdout, stderr=FNULL, stdout=FNULL)
+            elif (self.sox.poll() and self.playing):
+                # restart sox if it crashes
+                self.debugLog("Restarting sox")
+                self.sox = Popen([soxPath, "-"], stdin=self.nrsc5.stdout, stderr=FNULL, stdout=FNULL)
     
     def checkStatus(self):
         # update status information
@@ -462,7 +468,7 @@ class NRSC5_GUI(object):
                 self.txtAlbum.set_text(self.streamInfo["Album"])
                 self.lblBitRate.set_label("{:3.1f} kbps".format(self.streamInfo["Bitrate"]))
                 self.lblBitRate2.set_label("{:3.1f} kbps".format(self.streamInfo["Bitrate"]))
-                self.lblError.set_label("{:2.2f}% Error ".format(self.streamInfo["BER"][1]*100))
+                self.lblError.set_label("{:2.2f}% BER ".format(self.streamInfo["BER"][1]*100))
                 self.lblCall.set_label(" " + self.streamInfo["Callsign"])
                 self.lblName.set_label(self.streamInfo["Callsign"])
                 self.lblSlogan.set_label(self.streamInfo["Slogan"])
@@ -480,10 +486,10 @@ class NRSC5_GUI(object):
                 
                 # from what I can tell, album art is displayed if the XHDR packet is 8 bytes long
                 # and the station logo is displayed if it's 6 bytes long
-                if (len(self.lastXHDR.split(' ')) == 8):
+                if (len(self.lastXHDR) == 8 and self.streamInfo["Cover"] != None):
                     imagePath = os.path.join(self.aasDir, self.streamInfo["Cover"])
                     image = self.streamInfo["Cover"]
-                elif (len(self.lastXHDR.split(' ')) == 6):
+                elif (len(self.lastXHDR) == 6 or self.streamInfo["Cover"] == None):
                     imagePath = os.path.join(self.aasDir, self.streamInfo["Logo"])
                     image = self.streamInfo["Logo"]
                     if (not os.path.isfile(imagePath)):
@@ -506,7 +512,7 @@ class NRSC5_GUI(object):
             self.statusTimer.start()
     
     def processTrafficMap(self, fileName):
-        r = re.compile("^TMT_.*_([1-3])_([1-3])_([\d]{4})([\d]{2})([\d]{2})_([\d]{2})([\d]{2}).*$")     # match file name
+        r = re.compile("^TMT_.*_([1-3])_([1-3])_([\d]{4})([\d]{2})([\d]{2})_([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})_([0-9A-Fa-f]{4})\..*$")     # match file name
         m = r.match(fileName)
         
         if (m):
@@ -521,7 +527,7 @@ class NRSC5_GUI(object):
             # check if the tile has already been loaded
             if (self.mapData["mapTiles"][x][y] == ts):
                 try:
-                    os.remove(os.path.join("aas", fileName))                                            # delete this tile, it's not needed
+                    os.remove(os.path.join(self.aasDir, fileName))                                            # delete this tile, it's not needed
                 except:
                     pass
                 return                                                                                  # no need to recreate the map if it hasn't changed
@@ -532,12 +538,21 @@ class NRSC5_GUI(object):
             self.mapData["mapTiles"][x][y] = ts                                                         # store time for current tile
             
             try:
-                currentPath = os.path.join("aas", fileName)                                             # create path to map tile
-                newPath = os.path.join("map", "TrafficMap_{:g}_{:g}.png".format(x,y))                   # create path to new tile location
+                realFile = "{}_{}".format(int(m.group(8),16),fileName)
+                currentPath = os.path.join(self.aasDir,realFile)
+                count = 0
+                while (os.path.isfile(currentPath) == False and count < (self.waittime * self.waitdivider)):
+                    count += 1
+                    time.sleep(float(self.waittime) / self.waitdivider)
+
+                if (count >= 1):
+                    self.debugLog("Had to wait {0:.2f}s for nrsc5 to actually write data".format(float(count) / self.waitdivider))
+
+                newPath = os.path.join(self.mapDir, "TrafficMap_{:g}_{:g}.png".format(x,y))                   # create path to new tile location
                 if(os.path.exists(newPath)): os.remove(newPath)                                         # delete old image if it exists (only necessary on windows)
                 shutil.move(currentPath, newPath)                                                       # move and rename map tile
             except:
-                self.debugLog("Error moving map tile", True)
+                self.debugLog("Error moving map tile (src: "+currentPath+", dest: "+newPath+")", True)
                 self.mapData["mapTiles"][x][y] = 0
                 
             # check if all of the tiles are loaded
@@ -549,11 +564,11 @@ class NRSC5_GUI(object):
                 imgMap = Image.new("RGB", (600, 600), "white")                                          # create blank image for traffic map
                 for i in range(0,3):
                     for j in range(0,3):
-                        tileFile = os.path.join("map", "TrafficMap_{:g}_{:g}.png".format(i,j))          # get path to tile
+                        tileFile = os.path.join(self.mapDir, "TrafficMap_{:g}_{:g}.png".format(i,j))          # get path to tile
                         imgMap.paste(Image.open(tileFile), (j*200, i*200))                              # paste tile into map
                         os.remove(tileFile)                                                             # delete tile image
                 
-                imgMap.save(os.path.join("map", "TrafficMap.png"))                                      # save traffic map
+                imgMap.save(os.path.join(self.mapDir, "TrafficMap.png"))                                      # save traffic map
                 
                 # display on map page
                 if (self.radMapTraffic.get_active()):
@@ -563,7 +578,7 @@ class NRSC5_GUI(object):
                 if (self.mapViewer is not None): self.mapViewer.updated(0)                              # notify map viwerer if it's open
     
     def processWeatherOverlay(self, fileName):
-        r = re.compile("^DWRO_(.*)_.*_([\d]{4})([\d]{2})([\d]{2})_([\d]{2})([\d]{2}).*$")                    # match file name
+        r = re.compile("^DWRO_(.*)_.*_([\d]{4})([\d]{2})([\d]{2})_([\d]{2})([\d]{2})_([0-9A-Fa-f]+)\..*$")                    # match file name
         m = r.match(fileName)
         
         if (m):
@@ -574,12 +589,15 @@ class NRSC5_GUI(object):
             id = self.mapData["weatherID"]
             
             if (m.group(1) != id):
-                self.debugLog("Received weather overlay with the wrong ID: " + m.group(1))
+                if (id == ""):
+                    self.debugLog("Received weather overlay before metadata, ignoring...");
+                else:
+                    self.debugLog("Received weather overlay with the wrong ID: " + m.group(1) + " (wanted " + id +")")
                 return
             
             if (self.mapData["weatherTime"] == ts):
                 try:
-                    os.remove(os.path.join("aas", fileName))                                            # delete this tile, it's not needed
+                    os.remove(os.path.join(self.aasDir, fileName))                                            # delete this tile, it's not needed
                 except:
                     pass
                 return                                                                                  # no need to recreate the map if it hasn't changed
@@ -587,20 +605,29 @@ class NRSC5_GUI(object):
             self.debugLog("Got Weather Overlay")
             
             self.mapData["weatherTime"] = ts                                                            # store time for current overlay
-            wxOlPath  = os.path.join("map","WeatherOverlay_{:s}_{:}.png".format(id, ts))
-            wxMapPath = os.path.join("map","WeatherMap_{:s}_{:}.png".format(id, ts))
+            wxOlPath  = os.path.join(self.mapDir,"WeatherOverlay_{:s}_{:}.png".format(id, ts))
+            wxMapPath = os.path.join(self.mapDir,"WeatherMap_{:s}_{:}.png".format(id, ts))
             
             # move new overlay to map directory
             try:
                 if(os.path.exists(wxOlPath)): os.remove(wxOlPath)                                       # delete old image if it exists (only necessary on windows)
-                shutil.move(os.path.join("aas", fileName), wxOlPath)                                    # move and rename map tile
+                realFile = "{}_{}".format(int(m.group(7), 16),fileName);
+                count = 0
+                while (os.path.isfile(os.path.join(self.aasDir, realFile)) == False and count < (self.waittime * self.waitdivider)):
+                    count += 1
+                    time.sleep(float(self.waittime) / self.waitdivider)
+
+                if (count >= 1):
+                    self.debugLog("Had to wait {0:.2f}s for nrsc5 to actually write data".format(float(count) / self.waitdivider))
+
+                shutil.move(os.path.join(self.aasDir, realFile), wxOlPath)                                    # move and rename map tile
             except:
                 self.debugLog("Error moving weather overlay", True)
                 self.mapData["weatherTime"] = 0
                 
             # create weather map
             try:
-                mapPath = os.path.join("map", "BaseMap_" + id + ".png")                                 # get path to base map
+                mapPath = os.path.join(self.mapDir, "BaseMap_" + id + ".png")                                 # get path to base map
                 if (os.path.isfile(mapPath) == False):                                                  # make sure base map exists
                     self.makeBaseMap(self.mapData["weatherID"], self.mapData["weatherPos"])             # create base map if it doesn't exist
                 
@@ -630,9 +657,22 @@ class NRSC5_GUI(object):
     def proccessWeatherInfo(self, fileName):
         weatherID = None
         weatherPos = None
-        
+        r = re.compile("^DWRI.*_([\d]+)$")  # match file name
+        n = r.match(os.path.splitext(fileName)[0])
+
+        if n:
+            realFile = "{}_{}".format(int(n.group(1), 16),fileName);
+
         try:
-            with open(os.path.join("aas", fileName)) as weatherInfo:                                    # open weather info file
+            count = 0;
+            while (os.path.isfile(os.path.join(self.aasDir, realFile)) == False and count < (self.waittime * self.waitdivider)):
+                count += 1;
+                time.sleep(float(self.waittime) / self.waitdivider)
+
+            if (count >= 1):
+                self.debugLog("Had to wait {0:.2f}s for nrsc5 to actually write data".format(float(count) / self.waitdivider))
+
+            with open(os.path.join(self.aasDir, realFile)) as weatherInfo:                              # open weather info file
                 for line in weatherInfo:                                                                # read line by line
                     if ("DWR_Area_ID=" in line):                                                        # look for line with "DWR_Area_ID=" in it
                         # get ID from line
@@ -662,7 +702,7 @@ class NRSC5_GUI(object):
         numberOfMaps = 0
         r     = re.compile("^map.WeatherMap_([a-zA-Z0-9]+)_([0-9]+).png")
         now   = dtToTs(datetime.datetime.now(tz.tzutc()))                                               # get current time
-        files = glob.glob(os.path.join("map", "WeatherMap_") + "*.png")                                 # look for weather map files
+        files = glob.glob(os.path.join(self.mapDir, "WeatherMap_") + "*.png")                                 # look for weather map files
         files.sort()                                                                                    # sort files
         for f in files:  
             m = r.match(f)                                                                              # match regex
@@ -684,6 +724,7 @@ class NRSC5_GUI(object):
                     if (f not in self.weatherMaps): self.weatherMaps.append(f)                          # add to list
                     numberOfMaps += 1
         
+
         self.debugLog("Found {} weather maps".format(numberOfMaps))
         
     def getMapArea(self, lat1, lon1, lat2, lon2):
@@ -702,7 +743,7 @@ class NRSC5_GUI(object):
         return (int(round(x1)), int(round(y1)), int(round(x2)), int(round(y2)))
     
     def makeBaseMap(self, id, pos):
-        mapPath = os.path.join("map", "BaseMap_" + id + ".png")                                 # get map path
+        mapPath = os.path.join(self.mapDir, "BaseMap_" + id + ".png")                                 # get map path
         if (os.path.isfile(mapName)):
             if (os.path.isfile(mapPath) == False):                                              # check if the map has already been created for this location
                 self.debugLog("Creating new map: " + mapPath)
@@ -733,7 +774,7 @@ class NRSC5_GUI(object):
         draw.rectangle((x,y, x+231,y+25), outline="black", fill=(128,128,128,96))                       # draw a box around the text
         draw.text((x+3,y), text, fill="black", font=font)                                               # draw the text
         return imgTS                                                                                    # return the image
-    
+
     def parseFeedback(self, line):
         if (self.regex[4].match(line)):
             # match title
@@ -775,20 +816,43 @@ class NRSC5_GUI(object):
                 fileExt  = os.path.splitext(fileName)[1]
                 p = int(m.group(2), 16)
                 
-                if (p == self.streams[int(self.spinStream.get_value()-1)][0]):                    
-                    self.streamInfo["Cover"] = m.group(1)
-                    self.debugLog("Got Album Cover: " + fileName)
+                if (p == self.streams[int(self.spinStream.get_value()-1)][0]):
+                    r = re.compile("^[\w]{6}(.*)$")  # match file name
+                    n = r.match(os.path.splitext(fileName)[0])
+                    if (n):
+                        realFile = "{}_{}".format(int(n.group(1), 16), m.group(1))
+                        count = 0;
+                        while (os.path.isfile(os.path.join(self.aasDir, realFile)) == False and count < (self.waittime * self.waitdivider)):
+                            count += 1
+                            time.sleep(float(self.waittime) / self.waitdivider)
+
+                        if (count >= 1):
+                            self.debugLog("Had to wait {0:.2f}s for nrsc5 to actually write data".format(float(count) / self.waitdivider))
+
+                        self.streamInfo["Cover"] = realFile
+                        self.debugLog("Got Album Cover: " + realFile)
                 elif (p == self.streams[int(self.spinStream.get_value()-1)][1]):
-                    self.streamInfo["Logo"] = fileName
-                    self.stationLogos[self.stationStr][self.stationNum] = fileName    # add station logo to database
-                    self.debugLog("Got Station Logo: " + fileName)
+                    r = re.compile("^.*\$.*$")  # match file name
+                    n = r.match(os.path.splitext(fileName)[0])
+                    if (n):
+                        # cannot currently accurately predict station logo filename, so glob the latest.
+                        globfiles = glob.iglob(self.aasDir + os.path.sep + '*' + fileName)
+                        if (globfiles):
+                            try:
+                                realFile = os.path.split(min(globfiles, key=os.path.getctime))[1]
+                                self.streamInfo["Logo"] = realFile
+                                self.stationLogos[self.stationStr][self.stationNum] = realFile    # add station logo to database
+                                self.debugLog("Got Station Logo: " + fileName)
+                            except:
+                                self.debugLog("Error finding Station Logo: "+ fileName, True)
+
                 elif(fileName[0:5] == "DWRO_" and self.mapDir is not None):
                     self.processWeatherOverlay(m.group(1))
                 elif(fileName[0:4] == "TMT_" and self.mapDir is not None):
                     self.processTrafficMap(m.group(1))                                  # proccess traffic map tile
                 elif(fileName[0:5] == "DWRI_" and self.mapDir is not None):
                     self.proccessWeatherInfo(m.group(1))
-                        
+
         elif (self.regex[0].match(line)):
             # match station name
             m = self.regex[0].match(line)
@@ -804,12 +868,12 @@ class NRSC5_GUI(object):
         elif (self.regex[11].match(line)):
             # match stream
             m = self.regex[11].match(line)
-            t = int(m.group(1), 16) # stream type
+            t = m.group(1) # stream type
             s = int(m.group(2), 16) # stream number
-            
-            self.debugLog("Found Stream: Type {:02X}, Number {:02X}". format(t, s))
+
+            self.debugLog("Found Stream: Type {:s}, Number {:02X}". format(t, s))
             self.lastType = t
-            if (t == 0x40 and s >= 1 and s <= 4):
+            if (t == "audio" and s >= 1 and s <= 4):
                 self.numStreams = s
         elif (self.regex[12].match(line)):
             # match port
@@ -817,7 +881,7 @@ class NRSC5_GUI(object):
             p = int(m.group(1), 16)
             self.debugLog("\tFound Port: {:03X}". format(p))
             
-            if (self.lastType == 0x40 and self.numStreams > 0):
+            if (self.lastType == "audio" and self.numStreams > 0):
                 self.streams[self.numStreams-1].append(p)
 
     def getControls(self):
@@ -951,7 +1015,6 @@ class NRSC5_GUI(object):
             self.debugLog("Error: Unable to load config", True)
         
         # create aas directory
-        self.aasDir = os.path.join(sys.path[0], "aas")
         if (not os.path.isdir(self.aasDir)):
             try:
                 os.mkdir(self.aasDir)
@@ -960,7 +1023,6 @@ class NRSC5_GUI(object):
                 self.aasDir = None
         
         # create map directory
-        self.mapDir = os.path.join(sys.path[0], "map")
         if (not os.path.isdir(self.mapDir)):
             try:
                 os.mkdir(self.mapDir)
@@ -992,9 +1054,9 @@ class NRSC5_GUI(object):
         if (self.nrsc5 is not None and not self.nrsc5.poll()):
             self.nrsc5.kill()
         
-        # kill mpv if it's running
-        if (self.mpv is not None and not self.mpv.poll()):
-            self.mpv.kill()
+        # kill sox if it's running
+        if (self.sox is not None and not self.sox.poll()):
+            self.sox.kill()
         
         # shut down status timer if it's running    
         if (self.statusTimer is not None):
@@ -1192,7 +1254,7 @@ class NRSC5_Map(object):
             self.imgMap.set_from_stock(gtk.STOCK_MISSING_IMAGE, gtk.ICON_SIZE_LARGE_TOOLBAR)            # display missing image if file is not found
     
     def setMap(self, map):
-        if (map == 0):  self.showImage(os.path.join("map", "TrafficMap.png"), False)                    # show traffic map
+        if (map == 0):  self.showImage(os.path.join(self.mapDir, "TrafficMap.png"), False)                    # show traffic map
         elif (map == 1):self.showImage(self.data["weatherNow"], self.config["scale"])                   # show weather map
     
     def updated(self, imageType):
@@ -1221,4 +1283,6 @@ if __name__ == "__main__":
     os.chdir(sys.path[0])
     nrsc5_gui = NRSC5_GUI()
     nrsc5_gui.mainWindow.show()
+    if (debugMessages and debugAutoStart):
+        nrsc5_gui.on_btnPlay_clicked(nrsc5_gui)
     gtk.main()
