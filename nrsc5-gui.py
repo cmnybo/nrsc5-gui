@@ -442,7 +442,7 @@ class NRSC5_GUI(object):
             self.statusTimer.start()
 
     def processTrafficMap(self, fileName):
-        r = re.compile("^TMT_.*_([1-3])_([1-3])_([\d]{4})([\d]{2})([\d]{2})_([\d]{2})([\d]{2}).*$")     # match file name
+        r = re.compile("^TMT_.*_([1-3])_([1-3])_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2}).*$")               # match file name
         m = r.match(fileName)
 
         if m:
@@ -501,7 +501,7 @@ class NRSC5_GUI(object):
                     self.mapViewer.updated(0)                                                           # notify map viwerer if it's open
 
     def processWeatherOverlay(self, fileName):
-        r = re.compile("^DWRO_(.*)_.*_([\d]{4})([\d]{2})([\d]{2})_([\d]{2})([\d]{2}).*$")               # match file name
+        r = re.compile("^DWRO_(.*)_.*_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2}).*$")                         # match file name
         m = r.match(fileName)
 
         if m:
@@ -582,7 +582,7 @@ class NRSC5_GUI(object):
 
                     elif "Coordinates=" in line:                                                        # look for line with "Coordinates=" in it
                         # get coordinates from line
-                        r = re.compile("^Coordinates=.*\((-?[\d]+\.[\d]+),(-?[\d]+\.[\d]+)\).*\((-?[\d]+\.[\d]+),(-?[\d]+\.[\d]+)\).*$")
+                        r = re.compile("^Coordinates=.*\((-?\d+\.\d+),(-?\d+\.\d+)\).*\((-?\d+\.\d+),(-?\d+\.\d+)\).*$")
                         m = r.match(line)
                         weatherPos = [float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4))]
         except:
