@@ -782,11 +782,11 @@ class NRSC5_GUI(object):
                     self.streamInfo["Logo"] = evt.name
                     self.stationLogos[self.stationStr][self.stationNum] = evt.name                # add station logo to database
                     self.debugLog("Got Station Logo: " + evt.name)
-                elif(evt.name[0:5] == "DWRO_" and self.mapDir is not None):
+                elif evt.name[0:5] == "DWRO_" and self.mapDir is not None:
                     self.processWeatherOverlay(evt.name)
-                elif(evt.name[0:4] == "TMT_" and self.mapDir is not None):
+                elif evt.name[0:4] == "TMT_" and self.mapDir is not None:
                     self.processTrafficMap(evt.name)                                              # proccess traffic map tile
-                elif(evt.name[0:5] == "DWRI_" and self.mapDir is not None):
+                elif evt.name[0:5] == "DWRI_" and self.mapDir is not None:
                     self.proccessWeatherInfo(evt.name)
 
         elif type == nrsc5.EventType.SIS:
@@ -1068,7 +1068,7 @@ class NRSC5_Map(object):
                     self.animateTimer.start()
 
                 # no animation, just show the current map
-                elif(not self.config["animate"]):
+                elif not self.config["animate"]:
                     self.setMap(1)
 
     def on_chkAnimate_toggled(self, btn):
