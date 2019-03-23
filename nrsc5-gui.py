@@ -110,6 +110,19 @@ class NRSC5_GUI(object):
 
         self.audio_thread.start()
 
+    def display_logo(self):
+        if self.stationStr in self.stationLogos:
+            # show station logo if it's cached
+            logo = os.path.join(self.aasDir, self.stationLogos[self.stationStr][self.stationNum])
+            if os.path.isfile(logo):
+                self.streamInfo["Logo"] = self.stationLogos[self.stationStr][self.stationNum]
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file(logo)
+                pixbuf = pixbuf.scale_simple(200, 200, GdkPixbuf.InterpType.HYPER)
+                self.imgCover.set_from_pixbuf(pixbuf)
+        else:
+            # add entry in database for the station if it doesn't exist
+            self.stationLogos[self.stationStr] = ["", "", "", ""]
+
     def on_btnPlay_clicked(self, btn):
         # start playback
         if not self.playing:
@@ -127,7 +140,6 @@ class NRSC5_GUI(object):
 
             # disable the controls
             self.spinFreq.set_sensitive(False)
-            self.spinStream.set_sensitive(False)
             self.spinGain.set_sensitive(False)
             self.spinPPM.set_sensitive(False)
             self.spinRTL.set_sensitive(False)
@@ -142,17 +154,7 @@ class NRSC5_GUI(object):
             self.stationStr = str(self.spinFreq.get_value())
             self.stationNum = int(self.spinStream.get_value())-1
 
-            if self.stationStr in self.stationLogos:
-                # show station logo if it's cached
-                logo = os.path.join(self.aasDir, self.stationLogos[self.stationStr][self.stationNum])
-                if os.path.isfile(logo):
-                    self.streamInfo["Logo"] = self.stationLogos[self.stationStr][self.stationNum]
-                    pixbuf = GdkPixbuf.Pixbuf.new_from_file(logo)
-                    pixbuf = pixbuf.scale_simple(200, 200, GdkPixbuf.InterpType.HYPER)
-                    self.imgCover.set_from_pixbuf(pixbuf)
-            else:
-                # add entry in database for the station if it doesn't exist
-                self.stationLogos[self.stationStr] = ["", "", "", ""]
+            self.display_logo()
 
             # check if station is bookmarked
             self.bookmarked = False
@@ -185,7 +187,6 @@ class NRSC5_GUI(object):
             if not self.cbAutoGain.get_active():
                 self.spinGain.set_sensitive(True)
             self.spinFreq.set_sensitive(True)
-            self.spinStream.set_sensitive(True)
             self.spinPPM.set_sensitive(True)
             self.spinRTL.set_sensitive(True)
             self.btnPlay.set_sensitive(True)
@@ -298,6 +299,17 @@ class NRSC5_GUI(object):
 
         self.about_dialog = about_dialog
         about_dialog.show()
+
+    def on_spinStream_value_changed(self, spin):
+        self.streamInfo["Title"] = ""
+        self.streamInfo["Album"] = ""
+        self.streamInfo["Artist"] = ""
+        self.streamInfo["Cover"] = ""
+        self.streamInfo["Logo"] = ""
+        self.streamInfo["Bitrate"] = 0
+        self.stationNum = int(self.spinStream.get_value())-1
+        if self.playing:
+            self.display_logo()
 
     def on_cbAutoGain_toggled(self, btn):
         self.spinGain.set_sensitive(not btn.get_active())
@@ -705,9 +717,6 @@ class NRSC5_GUI(object):
             stream.close()
         p.terminate()
 
-    def reset_bitrate(self):
-        self.streamInfo["Bitrate"] = 0
-
     def update_bitrate(self, bits):
         kbps = bits * self.AUDIO_SAMPLE_RATE / self.AUDIO_SAMPLES_PER_FRAME / 1000
         if self.streamInfo["Bitrate"] == 0:
@@ -775,13 +784,14 @@ class NRSC5_GUI(object):
                 with open(path, "wb") as f:
                     f.write(evt.data)
 
-                if evt.port == self.streams[int(self.spinStream.get_value()-1)][0]:
+                if evt.port == self.streams[self.stationNum][0]:
                     self.streamInfo["Cover"] = evt.name
                     self.debugLog("Got Album Cover: " + evt.name)
-                elif evt.port == self.streams[int(self.spinStream.get_value()-1)][1]:
+                elif evt.port == self.streams[self.stationNum][1]:
                     self.streamInfo["Logo"] = evt.name
                     self.stationLogos[self.stationStr][self.stationNum] = evt.name                # add station logo to database
                     self.debugLog("Got Station Logo: " + evt.name)
+                    self.display_logo()
                 elif evt.name[0:5] == "DWRO_" and self.mapDir is not None:
                     self.processWeatherOverlay(evt.name)
                 elif evt.name[0:4] == "TMT_" and self.mapDir is not None:
