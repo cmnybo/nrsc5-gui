@@ -46,6 +46,9 @@ debugMessages = False
 
 
 class NRSC5_GUI(object):
+    AUDIO_SAMPLE_RATE = 44100
+    AUDIO_SAMPLES_PER_FRAME = 2048
+
     def __init__(self):
         GObject.threads_init()
 
@@ -400,7 +403,7 @@ class NRSC5_GUI(object):
                 self.txtAlbum.set_text(self.streamInfo["Album"])
                 self.lblBitRate.set_label("{:3.1f} kbps".format(self.streamInfo["Bitrate"]))
                 self.lblBitRate2.set_label("{:3.1f} kbps".format(self.streamInfo["Bitrate"]))
-                self.lblError.set_label("{:2.2f}% Error ".format(self.streamInfo["BER"][1]*100))
+                self.lblError.set_label("{:2.2f}% Error ".format(ber[1]))
                 self.lblCall.set_label(" " + self.streamInfo["Callsign"])
                 self.lblName.set_label(self.streamInfo["Callsign"])
                 self.lblSlogan.set_label(self.streamInfo["Slogan"])
@@ -682,7 +685,7 @@ class NRSC5_GUI(object):
             index = p.get_default_output_device_info()["index"]
             stream = p.open(format=pyaudio.paInt16,
                             channels=2,
-                            rate=44100,
+                            rate=self.AUDIO_SAMPLE_RATE,
                             output_device_index=index,
                             output=True)
         except OSError:
@@ -702,6 +705,31 @@ class NRSC5_GUI(object):
             stream.close()
         p.terminate()
 
+    def reset_bitrate(self):
+        self.streamInfo["Bitrate"] = 0
+
+    def update_bitrate(self, bits):
+        kbps = bits * self.AUDIO_SAMPLE_RATE / self.AUDIO_SAMPLES_PER_FRAME / 1000
+        if self.streamInfo["Bitrate"] == 0:
+            self.streamInfo["Bitrate"] = kbps
+        else:
+            self.streamInfo["Bitrate"] = 0.99 * self.streamInfo["Bitrate"] + 0.01 * kbps
+
+    def update_ber(self, cber):
+        ber = self.streamInfo["BER"]
+        if ber[0] == ber[1] == ber[2] == ber[3] == 0:
+            ber[0] = cber
+            ber[1] = cber
+            ber[2] = cber
+            ber[3] = cber
+        else:
+            ber[0] = cber
+            ber[1] = 0.9 * ber[1] + 0.1 * cber
+            if cber < ber[2]:
+                ber[2] = cber
+            if cber > ber[3]:
+                ber[3] = cber
+
     def callback(self, type, evt):
         if type == nrsc5.EventType.LOST_DEVICE:
             pass  # TODO: update the GUI?
@@ -713,10 +741,10 @@ class NRSC5_GUI(object):
         elif type == nrsc5.EventType.MER:
             self.streamInfo["MER"] = [evt.lower, evt.upper]
         elif type == nrsc5.EventType.BER:
-            self.streamInfo["BER"] = [evt.cber, 0.0, 0.0, 0.0]  # TODO: average, min, max
+            self.update_ber(evt.cber)
         elif type == nrsc5.EventType.HDC:
             if evt.program == self.stationNum:
-                self.streamInfo["Bitrate"] = len(evt.data) * 8 * 44100 / 2048 / 1000  # TODO: averaging
+                self.update_bitrate(len(evt.data) * 8)
         elif type == nrsc5.EventType.AUDIO:
             if evt.program == self.stationNum:
                 self.audio_queue.put(evt.data)
