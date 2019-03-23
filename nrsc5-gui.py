@@ -52,37 +52,37 @@ class NRSC5_GUI(object):
         self.getControls()              # get controls and windows
         self.initStreamInfo()           # initilize stream info and clear status widgets
 
-        self.radio          = None
-        self.audio_queue    = queue.Queue(maxsize=64)
-        self.audio_thread   = threading.Thread(target=self.audio_worker)
-        self.playing        = False     # currently playing
-        self.statusTimer    = None      # status update timer
-        self.imageChanged   = False     # has the album art changed
-        self.xhdrChanged    = False     # has the HDDR data changed
-        self.lastImage      = ""        # last image file displayed
-        self.lastXHDR       = ""        # the last XHDR data received
-        self.stationStr     = ""        # current station frequency (string)
-        self.streamNum      = 0         # current station stream number
-        self.bookmarks      = []        # station bookmarks
-        self.stationLogos   = {}        # station logos
-        self.bookmarked     = False     # is current station bookmarked
-        self.mapViewer      = None      # map viewer window
-        self.weatherMaps    = []        # list of current weathermaps sorted by time
-        self.mapData        = {
-            "mapMode"       : 1,
-            "mapTiles"      : [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
-            "mapComplete"   : False,
-            "weatherTime"   : 0,
-            "weatherPos"    : [0, 0, 0, 0],
-            "weatherNow"    : "",
-            "weatherID"     : "",
-            "viewerConfig"  : {
-                "mode"           : 1,
-                "animate"        : False,
-                "scale"          : True,
-                "windowPos"      : (0, 0),
-                "windowSize"     : (764, 632),
-                "animationSpeed" : 0.5
+        self.radio = None
+        self.audio_queue = queue.Queue(maxsize=64)
+        self.audio_thread = threading.Thread(target=self.audio_worker)
+        self.playing = False            # currently playing
+        self.statusTimer = None         # status update timer
+        self.imageChanged = False       # has the album art changed
+        self.xhdrChanged = False        # has the HDDR data changed
+        self.lastImage = ""             # last image file displayed
+        self.lastXHDR = ""              # the last XHDR data received
+        self.stationStr = ""            # current station frequency (string)
+        self.streamNum = 0              # current station stream number
+        self.bookmarks = []             # station bookmarks
+        self.stationLogos = {}          # station logos
+        self.bookmarked = False         # is current station bookmarked
+        self.mapViewer = None           # map viewer window
+        self.weatherMaps = []           # list of current weathermaps sorted by time
+        self.mapData = {
+            "mapMode": 1,
+            "mapTiles": [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+            "mapComplete": False,
+            "weatherTime": 0,
+            "weatherPos": [0, 0, 0, 0],
+            "weatherNow": "",
+            "weatherID": "",
+            "viewerConfig": {
+                "mode": 1,
+                "animate": False,
+                "scale": True,
+                "windowPos": (0, 0),
+                "windowSize": (764, 632),
+                "animationSpeed": 0.5
             }
         }
 
@@ -815,39 +815,39 @@ class NRSC5_GUI(object):
         self.about_dialog = None
 
         # get controls
-        self.notebookMain  = builder.get_object("notebookMain")
-        self.imgCover      = builder.get_object("imgCover")
-        self.imgMap        = builder.get_object("imgMap")
-        self.spinFreq      = builder.get_object("spinFreq")
-        self.spinStream    = builder.get_object("spinStream")
-        self.spinGain      = builder.get_object("spinGain")
-        self.spinPPM       = builder.get_object("spinPPM")
-        self.spinRTL       = builder.get_object("spinRTL")
-        self.cbAutoGain    = builder.get_object("cbAutoGain")
-        self.btnPlay       = builder.get_object("btnPlay")
-        self.btnStop       = builder.get_object("btnStop")
-        self.btnBookmark   = builder.get_object("btnBookmark")
-        self.btnDelete     = builder.get_object("btnDelete")
+        self.notebookMain = builder.get_object("notebookMain")
+        self.imgCover = builder.get_object("imgCover")
+        self.imgMap = builder.get_object("imgMap")
+        self.spinFreq = builder.get_object("spinFreq")
+        self.spinStream = builder.get_object("spinStream")
+        self.spinGain = builder.get_object("spinGain")
+        self.spinPPM = builder.get_object("spinPPM")
+        self.spinRTL = builder.get_object("spinRTL")
+        self.cbAutoGain = builder.get_object("cbAutoGain")
+        self.btnPlay = builder.get_object("btnPlay")
+        self.btnStop = builder.get_object("btnStop")
+        self.btnBookmark = builder.get_object("btnBookmark")
+        self.btnDelete = builder.get_object("btnDelete")
         self.radMapTraffic = builder.get_object("radMapTraffic")
         self.radMapWeather = builder.get_object("radMapWeather")
-        self.txtTitle      = builder.get_object("txtTitle")
-        self.txtArtist     = builder.get_object("txtArtist")
-        self.txtAlbum      = builder.get_object("txtAlbum")
-        self.lblName       = builder.get_object("lblName")
-        self.lblSlogan     = builder.get_object("lblSlogan")
-        self.lblCall       = builder.get_object("lblCall")
-        self.lblGain       = builder.get_object("lblGain")
-        self.lblBitRate    = builder.get_object("lblBitRate")
-        self.lblBitRate2   = builder.get_object("lblBitRate2")
-        self.lblError      = builder.get_object("lblError")
-        self.lblMerLower   = builder.get_object("lblMerLower")
-        self.lblMerUpper   = builder.get_object("lblMerUpper")
-        self.lblBerNow     = builder.get_object("lblBerNow")
-        self.lblBerAvg     = builder.get_object("lblBerAvg")
-        self.lblBerMin     = builder.get_object("lblBerMin")
-        self.lblBerMax     = builder.get_object("lblBerMax")
-        self.lvBookmarks   = builder.get_object("listviewBookmarks")
-        self.lsBookmarks   = Gtk.ListStore(str, str, int)
+        self.txtTitle = builder.get_object("txtTitle")
+        self.txtArtist = builder.get_object("txtArtist")
+        self.txtAlbum = builder.get_object("txtAlbum")
+        self.lblName = builder.get_object("lblName")
+        self.lblSlogan = builder.get_object("lblSlogan")
+        self.lblCall = builder.get_object("lblCall")
+        self.lblGain = builder.get_object("lblGain")
+        self.lblBitRate = builder.get_object("lblBitRate")
+        self.lblBitRate2 = builder.get_object("lblBitRate2")
+        self.lblError = builder.get_object("lblError")
+        self.lblMerLower = builder.get_object("lblMerLower")
+        self.lblMerUpper = builder.get_object("lblMerUpper")
+        self.lblBerNow = builder.get_object("lblBerNow")
+        self.lblBerAvg = builder.get_object("lblBerAvg")
+        self.lblBerMin = builder.get_object("lblBerMin")
+        self.lblBerMax = builder.get_object("lblBerMax")
+        self.lvBookmarks = builder.get_object("listviewBookmarks")
+        self.lsBookmarks = Gtk.ListStore(str, str, int)
 
         self.lvBookmarks.set_model(self.lsBookmarks)
         self.lvBookmarks.get_selection().connect("changed", self.on_lvBookmarks_selection_changed)
@@ -981,18 +981,18 @@ class NRSC5_GUI(object):
                 width, height = self.mainWindow.get_size()
                 config = {
                     "CfgVersion": "1.1.0",
-                    "WindowX"   : winX,
-                    "WindowY"   : winY,
-                    "Width"     : width,
-                    "Height"    : height,
-                    "Frequency" : self.spinFreq.get_value(),
-                    "Stream"    : int(self.spinStream.get_value()),
-                    "Gain"      : self.spinGain.get_value(),
-                    "AutoGain"  : self.cbAutoGain.get_active(),
-                    "PPMError"  : int(self.spinPPM.get_value()),
-                    "RTL"       : int(self.spinRTL.get_value()),
-                    "Bookmarks" : self.bookmarks,
-                    "MapData"   : self.mapData,
+                    "WindowX": winX,
+                    "WindowY": winY,
+                    "Width": width,
+                    "Height": height,
+                    "Frequency": self.spinFreq.get_value(),
+                    "Stream": int(self.spinStream.get_value()),
+                    "Gain": self.spinGain.get_value(),
+                    "AutoGain": self.cbAutoGain.get_active(),
+                    "PPMError": int(self.spinPPM.get_value()),
+                    "RTL": int(self.spinRTL.get_value()),
+                    "Bookmarks": self.bookmarks,
+                    "MapData": self.mapData,
                 }
                 # sort bookmarks
                 config["Bookmarks"].sort(key=lambda t: t[2])
@@ -1017,25 +1017,25 @@ class NRSC5_Map(object):
         builder.add_from_file("mapForm.glade")
         builder.connect_signals(self)
 
-        self.parent         = parent                                                # parent class
-        self.callback       = callback                                              # callback function
-        self.data           = data                                                  # map data
-        self.animateTimer   = None                                                  # timer used to animate weather maps
-        self.animateBusy    = False
-        self.animateStop    = False
-        self.weatherMaps    = parent.weatherMaps                                    # list of weather maps sorted by time
-        self.mapIndex       = 0                                                     # the index of the next weather map to display
+        self.parent = parent                                                        # parent class
+        self.callback = callback                                                    # callback function
+        self.data = data                                                            # map data
+        self.animateTimer = None                                                    # timer used to animate weather maps
+        self.animateBusy = False
+        self.animateStop = False
+        self.weatherMaps = parent.weatherMaps                                       # list of weather maps sorted by time
+        self.mapIndex = 0                                                           # the index of the next weather map to display
 
         # get the controls
-        self.mapWindow      = builder.get_object("mapWindow")
-        self.imgMap         = builder.get_object("imgMap")
-        self.radMapWeather  = builder.get_object("radMapWeather")
-        self.radMapTraffic  = builder.get_object("radMapTraffic")
-        self.chkAnimate     = builder.get_object("chkAnimate")
-        self.chkScale       = builder.get_object("chkScale")
-        self.spnSpeed       = builder.get_object("spnSpeed")
-        self.adjSpeed       = builder.get_object("adjSpeed")
-        self.imgKey         = builder.get_object("imgKey")
+        self.mapWindow = builder.get_object("mapWindow")
+        self.imgMap = builder.get_object("imgMap")
+        self.radMapWeather = builder.get_object("radMapWeather")
+        self.radMapTraffic = builder.get_object("radMapTraffic")
+        self.chkAnimate = builder.get_object("chkAnimate")
+        self.chkScale = builder.get_object("chkScale")
+        self.spnSpeed = builder.get_object("spnSpeed")
+        self.adjSpeed = builder.get_object("adjSpeed")
+        self.imgKey = builder.get_object("imgKey")
 
         self.mapWindow.connect("delete-event", self.on_mapWindow_delete)
 
