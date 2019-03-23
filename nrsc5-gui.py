@@ -706,7 +706,8 @@ class NRSC5_GUI(object):
         if type == nrsc5.EventType.LOST_DEVICE:
             pass  # TODO: update the GUI?
         elif type == nrsc5.EventType.SYNC:
-            pass  # TODO: update the GUI?
+            self.streamInfo["Gain"] = self.radio.get_gain()
+            # TODO: update the GUI?
         elif type == nrsc5.EventType.LOST_SYNC:
             pass  # TODO: update the GUI?
         elif type == nrsc5.EventType.MER:
@@ -765,8 +766,6 @@ class NRSC5_GUI(object):
                 self.streamInfo["Callsign"] = evt.name
             if evt.slogan:
                 self.streamInfo["Slogan"] = evt.slogan
-
-        # TODO: self.streamInfo["Gain"] = float(m.group(1))
 
     def getControls(self):
         # setup gui
