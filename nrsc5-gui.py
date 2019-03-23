@@ -39,15 +39,12 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GObject, Gdk, GdkPixbuf
 
 
-mapName = "map.png"
-
-# print debug messages to stdout
-debugMessages = False
-
-
 class NRSC5_GUI(object):
     AUDIO_SAMPLE_RATE = 44100
     AUDIO_SAMPLES_PER_FRAME = 2048
+    MAP_FILE = "map.png"
+
+    debugMessages = False               # print debug messages to stdout
 
     def __init__(self):
         GObject.threads_init()
@@ -660,15 +657,15 @@ class NRSC5_GUI(object):
 
     def makeBaseMap(self, id, pos):
         mapPath = os.path.join("map", "BaseMap_" + id + ".png")                                 # get map path
-        if os.path.isfile(mapName):
+        if os.path.isfile(self.MAP_FILE):
             if not os.path.isfile(mapPath):                                                     # check if the map has already been created for this location
                 self.debugLog("Creating new map: " + mapPath)
                 px = self.getMapArea(*pos)                                                      # convert map locations to pixel coordinates
-                mapImg = Image.open(mapName).crop(px)                                           # open the full map and crop it to the coordinates
+                mapImg = Image.open(self.MAP_FILE).crop(px)                                     # open the full map and crop it to the coordinates
                 mapImg.save(mapPath)                                                            # save the cropped map to disk for later use
                 self.debugLog("Finished creating map")
         else:
-            self.debugLog("Error map file not found: " + mapName, True)
+            self.debugLog("Error map file not found: " + self.MAP_FILE, True)
             mapImg = Image.new("RGBA", (pos[2]-pos[1], pos[3]-pos[1]), "white")                 # if the full map is not available, use a blank image
             mapImg.save(mapPath)
 
@@ -1008,7 +1005,7 @@ class NRSC5_GUI(object):
             self.debugLog("Error: Unable to save config", True)
 
     def debugLog(self, message, force=False):
-        if debugMessages or force:
+        if self.debugMessages or force:
             now = datetime.datetime.now()
             print(now.strftime("%b %d %H:%M:%S : ") + message)
 
