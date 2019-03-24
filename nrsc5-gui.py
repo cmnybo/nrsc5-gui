@@ -225,7 +225,7 @@ class NRSC5_GUI(object):
         # select current station if not on bookmarks page
         if self.notebookMain.get_current_page() != 3:
             station = int((self.spinFreq.get_value()+0.005)*100) + int(self.spinStream.get_value())
-            for i in range(0, len(self.lsBookmarks)):
+            for i in range(len(self.lsBookmarks)):
                 if self.lsBookmarks[i][2] == station:
                     self.lvBookmarks.set_cursor(i)
                     break
@@ -238,7 +238,7 @@ class NRSC5_GUI(object):
         model.remove(iter)
 
         # remove bookmark
-        for i in range(0, len(self.bookmarks)):
+        for i in range(len(self.bookmarks)):
             if self.bookmarks[i][2] == station:
                 self.bookmarks.pop(i)
                 break
@@ -502,8 +502,8 @@ class NRSC5_GUI(object):
 
                 # stitch the map tiles into one image
                 imgMap = Image.new("RGB", (600, 600), "white")                                          # create blank image for traffic map
-                for i in range(0, 3):
-                    for j in range(0, 3):
+                for i in range(3):
+                    for j in range(3):
                         tileFile = os.path.join("map", "TrafficMap_{:g}_{:g}.png".format(i, j))         # get path to tile
                         imgMap.paste(Image.open(tileFile), (j*200, i*200))                              # paste tile into map
                         os.remove(tileFile)                                                             # delete tile image
@@ -677,8 +677,8 @@ class NRSC5_GUI(object):
 
     def checkTiles(self, t):
         # check if all the tiles have been received
-        for i in range(0, 3):
-            for j in range(0, 3):
+        for i in range(3):
+            for j in range(3):
                 if self.mapData["mapTiles"][i][j] != t:
                     return False
         return True
