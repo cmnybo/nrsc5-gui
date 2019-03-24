@@ -470,7 +470,7 @@ class NRSC5_GUI(object):
             if self.mapData["mapTiles"][x][y] == ts:
                 try:
                     os.remove(os.path.join("aas", fileName))                                            # delete this tile, it's not needed
-                except:
+                except OSError:
                     pass
                 return                                                                                  # no need to recreate the map if it hasn't changed
 
@@ -485,7 +485,7 @@ class NRSC5_GUI(object):
                 if(os.path.exists(newPath)):
                     os.remove(newPath)                                                                  # delete old image if it exists (only necessary on windows)
                 shutil.move(currentPath, newPath)                                                       # move and rename map tile
-            except:
+            except OSError:
                 self.debugLog("Error moving map tile", True)
                 self.mapData["mapTiles"][x][y] = 0
 
@@ -530,7 +530,7 @@ class NRSC5_GUI(object):
             if self.mapData["weatherTime"] == ts:
                 try:
                     os.remove(os.path.join("aas", fileName))                                            # delete this tile, it's not needed
-                except:
+                except OSError:
                     pass
                 return                                                                                  # no need to recreate the map if it hasn't changed
 
@@ -545,7 +545,7 @@ class NRSC5_GUI(object):
                 if(os.path.exists(wxOlPath)):
                     os.remove(wxOlPath)                                                                 # delete old image if it exists (only necessary on windows)
                 shutil.move(os.path.join("aas", fileName), wxOlPath)                                    # move and rename map tile
-            except:
+            except OSError:
                 self.debugLog("Error moving weather overlay", True)
                 self.mapData["weatherTime"] = 0
 
@@ -575,7 +575,7 @@ class NRSC5_GUI(object):
                 if self.mapViewer is not None:
                     self.mapViewer.updated(1)                                                           # notify map viwerer if it's open
 
-            except:
+            except OSError:
                 self.debugLog("Error creating weather map", True)
                 self.mapData["weatherTime"] = 0
 
@@ -597,7 +597,7 @@ class NRSC5_GUI(object):
                         r = re.compile("^Coordinates=.*\((-?\d+\.\d+),(-?\d+\.\d+)\).*\((-?\d+\.\d+),(-?\d+\.\d+)\).*$")
                         m = r.match(line)
                         weatherPos = [float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4))]
-        except:
+        except OSError:
             self.debugLog("Error opening weather info", True)
 
         if weatherID is not None and weatherPos is not None:                                            # check if ID and position were found
@@ -629,7 +629,7 @@ class NRSC5_GUI(object):
                             self.weatherMaps.pop(self.weatherMaps.index(f))                             # remove from list
                         os.remove(f)                                                                    # remove file
                         self.debugLog("Deleted old weather map: " + f)
-                    except:
+                    except OSError:
                         self.debugLog("Error Failed to Delete: " + f)
 
                 # skip if not the correct location
@@ -896,7 +896,7 @@ class NRSC5_GUI(object):
         try:
             with open("stationLogos.json", mode="r") as f:
                 self.stationLogos = json.load(f)
-        except:
+        except (OSError, json.decoder.JSONDecodeError):
             self.debugLog("Error: Unable to load station logo database", True)
 
         # load settings
@@ -926,7 +926,7 @@ class NRSC5_GUI(object):
                 self.bookmarks = config["Bookmarks"]
                 for bookmark in self.bookmarks:
                     self.lsBookmarks.append(bookmark)
-        except:
+        except (OSError, json.decoder.JSONDecodeError, KeyError):
             self.debugLog("Error: Unable to load config", True)
 
         # create aas directory
@@ -934,7 +934,7 @@ class NRSC5_GUI(object):
         if not os.path.isdir(self.aasDir):
             try:
                 os.mkdir(self.aasDir)
-            except:
+            except OSError:
                 self.debugLog("Error: Unable to create AAS directory", True)
                 self.aasDir = None
 
@@ -943,7 +943,7 @@ class NRSC5_GUI(object):
         if not os.path.isdir(self.mapDir):
             try:
                 os.mkdir(self.mapDir)
-            except:
+            except OSError:
                 self.debugLog("Error: Unable to create Map directory", True)
                 self.mapDir = None
 
@@ -1001,7 +1001,7 @@ class NRSC5_GUI(object):
 
             with open("stationLogos.json", mode="w") as f:
                 json.dump(self.stationLogos, f, indent=2)
-        except:
+        except OSError:
             self.debugLog("Error: Unable to save config", True)
 
     def debugLog(self, message, force=False):
