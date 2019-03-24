@@ -303,6 +303,7 @@ class NRSC5_GUI(object):
         about_dialog.show()
 
     def on_spinStream_value_changed(self, spin):
+        self.lastXHDR = ""
         self.streamInfo["Title"] = ""
         self.streamInfo["Album"] = ""
         self.streamInfo["Artist"] = ""
@@ -793,7 +794,6 @@ class NRSC5_GUI(object):
                     self.streamInfo["Logo"] = evt.name
                     self.stationLogos[self.stationStr][self.stationNum] = evt.name                # add station logo to database
                     logging.debug("Got station logo: " + evt.name)
-                    self.display_logo()
                 elif evt.name[0:5] == "DWRO_" and self.mapDir is not None:
                     self.processWeatherOverlay(evt.name)
                 elif evt.name[0:4] == "TMT_" and self.mapDir is not None:
