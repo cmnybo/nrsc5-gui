@@ -23,6 +23,7 @@ from PIL import Image, ImageFont, ImageDraw
 import datetime
 import glob
 import json
+import logging
 import nrsc5
 import os
 import pyaudio
@@ -44,9 +45,13 @@ class NRSC5_GUI(object):
     AUDIO_SAMPLES_PER_FRAME = 2048
     MAP_FILE = "map.png"
 
-    debugMessages = False               # print debug messages to stdout
+    logLevel = 20                       # decrease to 10 to enable debug logs
 
     def __init__(self):
+        logging.basicConfig(level=self.logLevel,
+                            format="%(asctime)s %(levelname)-5s %(filename)s:%(lineno)d: %(message)s",
+                            datefmt="%H:%M:%S")
+
         GObject.threads_init()
 
         self.getControls()              # get controls and windows
@@ -444,7 +449,7 @@ class NRSC5_GUI(object):
                     pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagePath)
                     pixbuf = pixbuf.scale_simple(200, 200, GdkPixbuf.InterpType.HYPER)
                     self.imgCover.set_from_pixbuf(pixbuf)
-                    self.debugLog("Image Changed")
+                    logging.debug("Image changed")
             finally:
                 Gdk.threads_leave()
 
@@ -474,7 +479,7 @@ class NRSC5_GUI(object):
                     pass
                 return                                                                                  # no need to recreate the map if it hasn't changed
 
-            self.debugLog("Got Traffic Map Tile: {:g},{:g}".format(x, y))
+            logging.debug("Got traffic map tile: {}, {}".format(x, y))
 
             self.mapData["mapComplete"] = False                                                         # new tiles are coming in, the map is nolonger complete
             self.mapData["mapTiles"][x][y] = ts                                                         # store time for current tile
@@ -486,12 +491,12 @@ class NRSC5_GUI(object):
                     os.remove(newPath)                                                                  # delete old image if it exists (only necessary on windows)
                 shutil.move(currentPath, newPath)                                                       # move and rename map tile
             except OSError:
-                self.debugLog("Error moving map tile", True)
+                logging.error("Error moving map tile")
                 self.mapData["mapTiles"][x][y] = 0
 
             # check if all of the tiles are loaded
             if self.checkTiles(ts):
-                self.debugLog("Got complete traffic map")
+                logging.debug("Got complete traffic map")
                 self.mapData["mapComplete"] = True                                                      # map is complete
 
                 # stitch the map tiles into one image
@@ -524,7 +529,7 @@ class NRSC5_GUI(object):
             id = self.mapData["weatherID"]
 
             if m.group(1) != id:
-                self.debugLog("Received weather overlay with the wrong ID: " + m.group(1))
+                logging.error("Received weather overlay with the wrong ID: " + m.group(1))
                 return
 
             if self.mapData["weatherTime"] == ts:
@@ -534,7 +539,7 @@ class NRSC5_GUI(object):
                     pass
                 return                                                                                  # no need to recreate the map if it hasn't changed
 
-            self.debugLog("Got Weather Overlay")
+            logging.debug("Got weather overlay")
 
             self.mapData["weatherTime"] = ts                                                            # store time for current overlay
             wxOlPath = os.path.join("map", "WeatherOverlay_{:s}_{:}.png".format(id, ts))
@@ -546,7 +551,7 @@ class NRSC5_GUI(object):
                     os.remove(wxOlPath)                                                                 # delete old image if it exists (only necessary on windows)
                 shutil.move(os.path.join("aas", fileName), wxOlPath)                                    # move and rename map tile
             except OSError:
-                self.debugLog("Error moving weather overlay", True)
+                logging.error("Error moving weather overlay")
                 self.mapData["weatherTime"] = 0
 
             # create weather map
@@ -576,7 +581,7 @@ class NRSC5_GUI(object):
                     self.mapViewer.updated(1)                                                           # notify map viwerer if it's open
 
             except OSError:
-                self.debugLog("Error creating weather map", True)
+                logging.error("Error creating weather map")
                 self.mapData["weatherTime"] = 0
 
     def proccessWeatherInfo(self, fileName):
@@ -598,11 +603,11 @@ class NRSC5_GUI(object):
                         m = r.match(line)
                         weatherPos = [float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4))]
         except OSError:
-            self.debugLog("Error opening weather info", True)
+            logging.error("Error opening weather info")
 
         if weatherID is not None and weatherPos is not None:                                            # check if ID and position were found
             if self.mapData["weatherID"] != weatherID or self.mapData["weatherPos"] != weatherPos:      # check if ID or position has changed
-                self.debugLog("Got position: ({:n}, {:n}) ({:n}, {:n})".format(*weatherPos))
+                logging.debug("Got position: ({:n}, {:n}) ({:n}, {:n})".format(*weatherPos))
                 self.mapData["weatherID"] = weatherID                                                   # set weather ID
                 self.mapData["weatherPos"] = weatherPos                                                 # set weather map position
 
@@ -628,9 +633,9 @@ class NRSC5_GUI(object):
                         if f in self.weatherMaps:
                             self.weatherMaps.pop(self.weatherMaps.index(f))                             # remove from list
                         os.remove(f)                                                                    # remove file
-                        self.debugLog("Deleted old weather map: " + f)
+                        logging.debug("Deleted old weather map: " + f)
                     except OSError:
-                        self.debugLog("Error Failed to Delete: " + f)
+                        logging.error("Failed to delete old weather map: " + f)
 
                 # skip if not the correct location
                 elif id == self.mapData["weatherID"]:
@@ -638,7 +643,7 @@ class NRSC5_GUI(object):
                         self.weatherMaps.append(f)                                                      # add to list
                     numberOfMaps += 1
 
-        self.debugLog("Found {} weather maps".format(numberOfMaps))
+        logging.debug("Found {} weather maps".format(numberOfMaps))
 
     def getMapArea(self, lat1, lon1, lat2, lon2):
         from math import asinh, tan, radians
@@ -659,13 +664,13 @@ class NRSC5_GUI(object):
         mapPath = os.path.join("map", "BaseMap_" + id + ".png")                                 # get map path
         if os.path.isfile(self.MAP_FILE):
             if not os.path.isfile(mapPath):                                                     # check if the map has already been created for this location
-                self.debugLog("Creating new map: " + mapPath)
+                logging.debug("Creating new map: " + mapPath)
                 px = self.getMapArea(*pos)                                                      # convert map locations to pixel coordinates
                 mapImg = Image.open(self.MAP_FILE).crop(px)                                     # open the full map and crop it to the coordinates
                 mapImg.save(mapPath)                                                            # save the cropped map to disk for later use
-                self.debugLog("Finished creating map")
+                logging.debug("Finished creating map")
         else:
-            self.debugLog("Error map file not found: " + self.MAP_FILE, True)
+            logging.error("Map file not found: " + self.MAP_FILE)
             mapImg = Image.new("RGBA", (pos[2]-pos[1], pos[3]-pos[1]), "white")                 # if the full map is not available, use a blank image
             mapImg.save(mapPath)
 
@@ -698,7 +703,7 @@ class NRSC5_GUI(object):
                             output_device_index=index,
                             output=True)
         except OSError:
-            self.debugLog("No audio output device available.")
+            logging.warn("No audio output device available")
             stream = None
 
         while True:
@@ -766,14 +771,14 @@ class NRSC5_GUI(object):
                     if evt.xhdr.param != self.lastXHDR:
                         self.lastXHDR = evt.xhdr.param
                         self.xhdrChanged = True
-                        self.debugLog("XHDR Changed: {}".format(evt.xhdr.param))
+                        logging.debug("XHDR changed: {}".format(evt.xhdr.param))
         elif type == nrsc5.EventType.SIG:
             for service in evt:
-                self.debugLog("Found Stream: Type {}, Number {}". format(service.type, service.number))
+                logging.debug("Found stream: type {}, number {}". format(service.type, service.number))
                 if service.type == nrsc5.ServiceType.AUDIO:
                     for component in service.components:
                         if component.type == nrsc5.ComponentType.DATA:
-                            self.debugLog("\tFound Port: {:04X}". format(component.data.port))
+                            logging.debug("    Found port: {:04X}". format(component.data.port))
                             self.streams[service.number-1].append(component.data.port)
         elif type == nrsc5.EventType.LOT:
             if self.aasDir:
@@ -783,11 +788,11 @@ class NRSC5_GUI(object):
 
                 if evt.port == self.streams[self.stationNum][0]:
                     self.streamInfo["Cover"] = evt.name
-                    self.debugLog("Got Album Cover: " + evt.name)
+                    logging.debug("Got album cover: " + evt.name)
                 elif evt.port == self.streams[self.stationNum][1]:
                     self.streamInfo["Logo"] = evt.name
                     self.stationLogos[self.stationStr][self.stationNum] = evt.name                # add station logo to database
-                    self.debugLog("Got Station Logo: " + evt.name)
+                    logging.debug("Got station logo: " + evt.name)
                     self.display_logo()
                 elif evt.name[0:5] == "DWRO_" and self.mapDir is not None:
                     self.processWeatherOverlay(evt.name)
@@ -897,7 +902,7 @@ class NRSC5_GUI(object):
             with open("stationLogos.json", mode="r") as f:
                 self.stationLogos = json.load(f)
         except (OSError, json.decoder.JSONDecodeError):
-            self.debugLog("Error: Unable to load station logo database", True)
+            logging.warn("Unable to load station logo database")
 
         # load settings
         try:
@@ -927,7 +932,7 @@ class NRSC5_GUI(object):
                 for bookmark in self.bookmarks:
                     self.lsBookmarks.append(bookmark)
         except (OSError, json.decoder.JSONDecodeError, KeyError):
-            self.debugLog("Error: Unable to load config", True)
+            logging.warn("Unable to load config")
 
         # create aas directory
         self.aasDir = os.path.join(sys.path[0], "aas")
@@ -935,7 +940,7 @@ class NRSC5_GUI(object):
             try:
                 os.mkdir(self.aasDir)
             except OSError:
-                self.debugLog("Error: Unable to create AAS directory", True)
+                logging.error("Unable to create AAS directory")
                 self.aasDir = None
 
         # create map directory
@@ -944,7 +949,7 @@ class NRSC5_GUI(object):
             try:
                 os.mkdir(self.mapDir)
             except OSError:
-                self.debugLog("Error: Unable to create Map directory", True)
+                logging.error("Unable to create map directory")
                 self.mapDir = None
 
     def shutdown(self, *args):
@@ -954,7 +959,7 @@ class NRSC5_GUI(object):
             self.mapViewer.animateStop = True
 
             while self.mapViewer.animateBusy:
-                self.debugLog("Animation Busy - Stopping")
+                logging.debug("Animation busy - stopping")
                 if self.mapViewer.animateTimer is not None:
                     self.mapViewer.animateTimer.cancel()
                 time.sleep(0.25)
@@ -1002,12 +1007,7 @@ class NRSC5_GUI(object):
             with open("stationLogos.json", mode="w") as f:
                 json.dump(self.stationLogos, f, indent=2)
         except OSError:
-            self.debugLog("Error: Unable to save config", True)
-
-    def debugLog(self, message, force=False):
-        if self.debugMessages or force:
-            now = datetime.datetime.now()
-            print(now.strftime("%b %d %H:%M:%S : ") + message)
+            logging.error("Unable to save config")
 
 
 class NRSC5_Map(object):
