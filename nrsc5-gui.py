@@ -1180,11 +1180,6 @@ def dtToTs(dt):
     return int((dt - datetime.datetime(1970, 1, 1, tzinfo=tz.tzutc())).total_seconds())
 
 
-def tsToDt(ts):
-    # convert timestamp to datetime
-    return datetime.datetime.utcfromtimestamp(ts)
-
-
 def imgToPixbuf(img):
     # convert PIL.Image to gdk.pixbuf
     with tempfile.NamedTemporaryFile("wb", suffix=".png") as f:
