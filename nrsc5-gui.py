@@ -775,11 +775,11 @@ class NRSC5_GUI(object):
                         logging.debug("XHDR changed: {}".format(evt.xhdr.param))
         elif type == nrsc5.EventType.SIG:
             for service in evt:
-                logging.debug("Found stream: type {}, number {}". format(service.type, service.number))
+                logging.debug("Found stream: type {}, number {}".format(service.type, service.number))
                 if service.type == nrsc5.ServiceType.AUDIO:
                     for component in service.components:
                         if component.type == nrsc5.ComponentType.DATA:
-                            logging.debug("    Found port: {:04X}". format(component.data.port))
+                            logging.debug("    Found port: {:04X}".format(component.data.port))
                             self.streams[service.number-1].append(component.data.port)
         elif type == nrsc5.EventType.LOT:
             if self.aasDir:
