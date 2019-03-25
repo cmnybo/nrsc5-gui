@@ -22,6 +22,7 @@ from PIL import Image, ImageFont, ImageDraw
 
 import datetime
 import glob
+import io
 import json
 import logging
 import nrsc5
@@ -73,10 +74,10 @@ class NRSC5_GUI(object):
         self.bookmarked = False         # is current station bookmarked
         self.mapViewer = None           # map viewer window
         self.weatherMaps = []           # list of current weathermaps sorted by time
+        self.trafficMap = Image.new("RGB", (600, 600), "white")
+        self.mapTiles = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
         self.mapData = {
             "mapMode": 1,
-            "mapTiles": [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
-            "mapComplete": False,
             "weatherTime": 0,
             "weatherPos": [0, 0, 0, 0],
             "weatherNow": "",
@@ -108,7 +109,7 @@ class NRSC5_GUI(object):
         self.lvBookmarks.append_column(colName)
 
         self.loadSettings()
-        self.proccessWeatherMaps()
+        self.processWeatherMaps()
 
         self.audio_thread.start()
 
@@ -459,7 +460,7 @@ class NRSC5_GUI(object):
             self.statusTimer = threading.Timer(1, self.checkStatus)
             self.statusTimer.start()
 
-    def processTrafficMap(self, fileName):
+    def processTrafficMap(self, fileName, data):
         r = re.compile("^TMT_.*_([1-3])_([1-3])_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2}).*$")               # match file name
         m = r.match(fileName)
 
@@ -473,52 +474,28 @@ class NRSC5_GUI(object):
             ts = dtToTs(dt)                                                                             # unix timestamp (utc)
 
             # check if the tile has already been loaded
-            if self.mapData["mapTiles"][x][y] == ts:
-                try:
-                    os.remove(os.path.join("aas", fileName))                                            # delete this tile, it's not needed
-                except OSError:
-                    pass
+            if self.mapTiles[x][y] == ts:
                 return                                                                                  # no need to recreate the map if it hasn't changed
 
             logging.debug("Got traffic map tile: {}, {}".format(x, y))
 
-            self.mapData["mapComplete"] = False                                                         # new tiles are coming in, the map is nolonger complete
-            self.mapData["mapTiles"][x][y] = ts                                                         # store time for current tile
-
-            try:
-                currentPath = os.path.join("aas", fileName)                                             # create path to map tile
-                newPath = os.path.join("map", "TrafficMap_{:g}_{:g}.png".format(x, y))                  # create path to new tile location
-                if(os.path.exists(newPath)):
-                    os.remove(newPath)                                                                  # delete old image if it exists (only necessary on windows)
-                shutil.move(currentPath, newPath)                                                       # move and rename map tile
-            except OSError:
-                logging.error("Error moving map tile")
-                self.mapData["mapTiles"][x][y] = 0
+            self.mapTiles[x][y] = ts                                                                    # store time for current tile
+            self.trafficMap.paste(Image.open(io.BytesIO(data)), (y*200, x*200))                         # paste tile into map
 
             # check if all of the tiles are loaded
             if self.checkTiles(ts):
                 logging.debug("Got complete traffic map")
-                self.mapData["mapComplete"] = True                                                      # map is complete
-
-                # stitch the map tiles into one image
-                imgMap = Image.new("RGB", (600, 600), "white")                                          # create blank image for traffic map
-                for i in range(3):
-                    for j in range(3):
-                        tileFile = os.path.join("map", "TrafficMap_{:g}_{:g}.png".format(i, j))         # get path to tile
-                        imgMap.paste(Image.open(tileFile), (j*200, i*200))                              # paste tile into map
-                        os.remove(tileFile)                                                             # delete tile image
-
-                imgMap.save(os.path.join("map", "TrafficMap.png"))                                      # save traffic map
+                self.trafficMap.save(os.path.join("map", "TrafficMap.png"))                             # save traffic map
 
                 # display on map page
                 if self.radMapTraffic.get_active():
-                    imgMap = imgMap.resize((200, 200), Image.LANCZOS)                                   # scale map to fit window
+                    imgMap = self.trafficMap.resize((200, 200), Image.LANCZOS)                          # scale map to fit window
                     self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
 
                 if self.mapViewer is not None:
                     self.mapViewer.updated(0)                                                           # notify map viwerer if it's open
 
-    def processWeatherOverlay(self, fileName):
+    def processWeatherOverlay(self, fileName, data):
         r = re.compile("^DWRO_(.*)_.*_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2}).*$")                         # match file name
         m = r.match(fileName)
 
@@ -534,26 +511,12 @@ class NRSC5_GUI(object):
                 return
 
             if self.mapData["weatherTime"] == ts:
-                try:
-                    os.remove(os.path.join("aas", fileName))                                            # delete this tile, it's not needed
-                except OSError:
-                    pass
                 return                                                                                  # no need to recreate the map if it hasn't changed
 
             logging.debug("Got weather overlay")
 
             self.mapData["weatherTime"] = ts                                                            # store time for current overlay
-            wxOlPath = os.path.join("map", "WeatherOverlay_{:s}_{:}.png".format(id, ts))
-            wxMapPath = os.path.join("map", "WeatherMap_{:s}_{:}.png".format(id, ts))
-
-            # move new overlay to map directory
-            try:
-                if(os.path.exists(wxOlPath)):
-                    os.remove(wxOlPath)                                                                 # delete old image if it exists (only necessary on windows)
-                shutil.move(os.path.join("aas", fileName), wxOlPath)                                    # move and rename map tile
-            except OSError:
-                logging.error("Error moving weather overlay")
-                self.mapData["weatherTime"] = 0
+            wxMapPath = os.path.join("map", "WeatherMap_{}_{}.png".format(id, ts))
 
             # create weather map
             try:
@@ -564,12 +527,11 @@ class NRSC5_GUI(object):
                 imgMap = Image.open(mapPath).convert("RGBA")                                            # open map image
                 posTS = (imgMap.size[0]-235, imgMap.size[1]-29)                                         # calculate position to put timestamp (bottom right)
                 imgTS = self.mkTimestamp(t, imgMap.size, posTS)                                         # create timestamp
-                imgRadar = Image.open(wxOlPath).convert("RGBA")                                         # open radar overlay
+                imgRadar = Image.open(io.BytesIO(data)).convert("RGBA")                                 # open radar overlay
                 imgRadar = imgRadar.resize(imgMap.size, Image.LANCZOS)                                  # resize radar overlay to fit the map
                 imgMap = Image.alpha_composite(imgMap, imgRadar)                                        # overlay radar image on map
                 imgMap = Image.alpha_composite(imgMap, imgTS)                                           # overlay timestamp
                 imgMap.save(wxMapPath)                                                                  # save weather map
-                os.remove(wxOlPath)                                                                     # remove overlay image
                 self.mapData["weatherNow"] = wxMapPath
 
                 # display on map page
@@ -577,7 +539,7 @@ class NRSC5_GUI(object):
                     imgMap = imgMap.resize((200, 200), Image.LANCZOS)                                   # scale map to fit window
                     self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
 
-                self.proccessWeatherMaps()                                                              # get rid of old maps and add new ones to the list
+                self.processWeatherMaps()                                                               # get rid of old maps and add new ones to the list
                 if self.mapViewer is not None:
                     self.mapViewer.updated(1)                                                           # notify map viwerer if it's open
 
@@ -585,26 +547,22 @@ class NRSC5_GUI(object):
                 logging.error("Error creating weather map")
                 self.mapData["weatherTime"] = 0
 
-    def proccessWeatherInfo(self, fileName):
+    def processWeatherInfo(self, fileName, data):
         weatherID = None
         weatherPos = None
 
-        try:
-            with open(os.path.join("aas", fileName)) as weatherInfo:                                    # open weather info file
-                for line in weatherInfo:                                                                # read line by line
-                    if "DWR_Area_ID=" in line:                                                          # look for line with "DWR_Area_ID=" in it
-                        # get ID from line
-                        r = re.compile("^DWR_Area_ID=\"(.+)\"$")
-                        m = r.match(line)
-                        weatherID = m.group(1)
+        for line in data.decode().split("\n"):                                                          # read line by line
+            if "DWR_Area_ID=" in line:                                                                  # look for line with "DWR_Area_ID=" in it
+                # get ID from line
+                r = re.compile("^DWR_Area_ID=\"(.+)\"$")
+                m = r.match(line)
+                weatherID = m.group(1)
 
-                    elif "Coordinates=" in line:                                                        # look for line with "Coordinates=" in it
-                        # get coordinates from line
-                        r = re.compile("^Coordinates=.*\((-?\d+\.\d+),(-?\d+\.\d+)\).*\((-?\d+\.\d+),(-?\d+\.\d+)\).*$")
-                        m = r.match(line)
-                        weatherPos = [float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4))]
-        except OSError:
-            logging.error("Error opening weather info")
+            elif "Coordinates=" in line:                                                                # look for line with "Coordinates=" in it
+                # get coordinates from line
+                r = re.compile("^Coordinates=.*\((-?\d+\.\d+),(-?\d+\.\d+)\).*\((-?\d+\.\d+),(-?\d+\.\d+)\).*$")
+                m = r.match(line)
+                weatherPos = [float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4))]
 
         if weatherID is not None and weatherPos is not None:                                            # check if ID and position were found
             if self.mapData["weatherID"] != weatherID or self.mapData["weatherPos"] != weatherPos:      # check if ID or position has changed
@@ -614,9 +572,9 @@ class NRSC5_GUI(object):
 
                 self.makeBaseMap(weatherID, weatherPos)
                 self.weatherMaps = []
-                self.proccessWeatherMaps()
+                self.processWeatherMaps()
 
-    def proccessWeatherMaps(self):
+    def processWeatherMaps(self):
         numberOfMaps = 0
         r = re.compile("^map.WeatherMap_([a-zA-Z0-9]+)_([0-9]+).png")
         now = dtToTs(datetime.datetime.now(tz.tzutc()))                                                 # get current time
@@ -679,7 +637,7 @@ class NRSC5_GUI(object):
         # check if all the tiles have been received
         for i in range(3):
             for j in range(3):
-                if self.mapData["mapTiles"][i][j] != t:
+                if self.mapTiles[i][j] != t:
                     return False
         return True
 
@@ -775,31 +733,49 @@ class NRSC5_GUI(object):
                         logging.debug("XHDR changed: {}".format(evt.xhdr.param))
         elif type == nrsc5.EventType.SIG:
             for service in evt:
-                logging.debug("Found stream: type {}, number {}".format(service.type, service.number))
                 if service.type == nrsc5.ServiceType.AUDIO:
                     for component in service.components:
                         if component.type == nrsc5.ComponentType.DATA:
-                            logging.debug("    Found port: {:04X}".format(component.data.port))
-                            self.streams[service.number-1].append(component.data.port)
+                            if component.data.mime == nrsc5.MIMEType.PRIMARY_IMAGE:
+                                self.streams[service.number-1]["image"] = component.data.port
+                            elif component.data.mime == nrsc5.MIMEType.STATION_LOGO:
+                                self.streams[service.number-1]["logo"] = component.data.port
+                elif service.type == nrsc5.ServiceType.DATA:
+                    for component in service.components:
+                        if component.type == nrsc5.ComponentType.DATA:
+                            if component.data.mime == nrsc5.MIMEType.TTN_STM_TRAFFIC:
+                                self.trafficPort = component.data.port
+                            elif component.data.mime == nrsc5.MIMEType.TTN_STM_WEATHER:
+                                self.weatherPort = component.data.port
         elif type == nrsc5.EventType.LOT:
-            if self.aasDir:
-                path = os.path.join(self.aasDir, evt.name)
-                with open(path, "wb") as f:
-                    f.write(evt.data)
+            logging.debug("LOT port={}".format(evt.port))
 
-                if evt.port == self.streams[self.stationNum][0]:
-                    self.streamInfo["Cover"] = evt.name
-                    logging.debug("Got album cover: " + evt.name)
-                elif evt.port == self.streams[self.stationNum][1]:
-                    self.streamInfo["Logo"] = evt.name
-                    self.stationLogos[self.stationStr][self.stationNum] = evt.name                # add station logo to database
-                    logging.debug("Got station logo: " + evt.name)
-                elif evt.name[0:5] == "DWRO_" and self.mapDir is not None:
-                    self.processWeatherOverlay(evt.name)
-                elif evt.name[0:4] == "TMT_" and self.mapDir is not None:
-                    self.processTrafficMap(evt.name)                                              # proccess traffic map tile
-                elif evt.name[0:5] == "DWRI_" and self.mapDir is not None:
-                    self.proccessWeatherInfo(evt.name)
+            if self.mapDir is not None:
+                if evt.port == self.trafficPort:
+                    if evt.name.startswith("TMT_"):
+                        self.processTrafficMap(evt.name, evt.data)
+                elif evt.port == self.weatherPort:
+                    if evt.name.startswith("DWRO_"):
+                        self.processWeatherOverlay(evt.name, evt.data)
+                    elif evt.name.startswith("DWRI_"):
+                        self.processWeatherInfo(evt.name, evt.data)
+
+            if self.aasDir is not None:
+                path = os.path.join(self.aasDir, evt.name)
+                for i, stream in enumerate(self.streams):
+                    if evt.port == stream.get("image"):
+                        logging.debug("Got album cover: " + evt.name)
+                        with open(path, "wb") as f:
+                            f.write(evt.data)
+                        if i == self.stationNum:
+                            self.streamInfo["Cover"] = evt.name
+                    elif evt.port == stream.get("logo"):
+                        logging.debug("Got station logo: " + evt.name)
+                        with open(path, "wb") as f:
+                            f.write(evt.data)
+                        self.stationLogos[self.stationStr][i] = evt.name
+                        if i == self.stationNum:
+                            self.streamInfo["Logo"] = evt.name
 
         elif type == nrsc5.EventType.SIS:
             if evt.name:
@@ -873,7 +849,9 @@ class NRSC5_GUI(object):
             "Gain": 0               # automatic gain
         }
 
-        self.streams = [[], [], [], []]
+        self.streams = [{}, {}, {}, {}]
+        self.trafficPort = -1
+        self.weatherPort = -1
         self.lastType = 0
 
         # clear status info
@@ -985,7 +963,7 @@ class NRSC5_GUI(object):
                 winX, winY = self.mainWindow.get_position()
                 width, height = self.mainWindow.get_size()
                 config = {
-                    "CfgVersion": "1.1.0",
+                    "CfgVersion": "1.2.0",
                     "WindowX": winX,
                     "WindowY": winY,
                     "Width": width,
