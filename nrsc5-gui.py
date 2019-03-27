@@ -30,7 +30,6 @@ import os
 import pyaudio
 import queue
 import re
-import shutil
 import sys
 import tempfile
 import threading
