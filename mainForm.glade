@@ -37,7 +37,7 @@
     <property name="can_focus">False</property>
     <property name="pixbuf">weather.png</property>
   </object>
-  <object class="GtkWindow" id="mainWindow">
+  <object class="GtkWindow" id="main_window">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">NRSC5 GUI</property>
     <property name="icon">logo.png</property>
@@ -205,7 +205,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinButton" id="spinFreq">
+                  <object class="GtkSpinButton" id="spin_freq">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">●</property>
@@ -289,7 +289,7 @@
                     <property name="left_padding">6</property>
                     <property name="right_padding">6</property>
                     <child>
-                      <object class="GtkImage" id="imgCover">
+                      <object class="GtkImage" id="img_cover">
                         <property name="width_request">200</property>
                         <property name="height_request">200</property>
                         <property name="visible">True</property>
@@ -397,7 +397,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="lblMerLower">
+                          <object class="GtkLabel" id="lbl_mer_lower">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Modulation Error Ratio (Lower)</property>
@@ -412,7 +412,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="lblMerUpper">
+                          <object class="GtkLabel" id="lbl_mer_upper">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Modulation Error Ratio (Upper)</property>
@@ -427,7 +427,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="lblBerNow">
+                          <object class="GtkLabel" id="lbl_ber_now">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Bit Error Rate</property>
@@ -442,7 +442,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="lblBerAvg">
+                          <object class="GtkLabel" id="lbl_ber_avg">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Bit Error Rate (Average)</property>
@@ -457,7 +457,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="lblBerMin">
+                          <object class="GtkLabel" id="lbl_ber_min">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Bit Error Rate (Minimum)</property>
@@ -472,7 +472,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="lblBerMax">
+                          <object class="GtkLabel" id="lbl_ber_max">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Bit Error Rate (Maximum)</property>
@@ -487,7 +487,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="lblName">
+                          <object class="GtkLabel" id="lbl_name">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
@@ -501,7 +501,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="lblSlogan">
+                          <object class="GtkLabel" id="lbl_slogan">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="xpad">5</property>
@@ -534,7 +534,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="lblBitRate2">
+                          <object class="GtkLabel" id="lbl_bitrate2">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Audio Bit Rate</property>
@@ -621,7 +621,7 @@
                           <placeholder/>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="lblGain5">
+                          <object class="GtkLabel" id="lbl_gain5">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="xpad">10</property>
@@ -634,7 +634,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkSpinButton" id="spinGain">
+                          <object class="GtkSpinButton" id="spin_gain">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="tooltip_text" translatable="yes">RF Gain (dBm)</property>
@@ -674,7 +674,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="lblGain1">
+                          <object class="GtkLabel" id="lbl_gain1">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="xpad">10</property>
@@ -689,7 +689,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkSpinButton" id="spinPPM">
+                          <object class="GtkSpinButton" id="spin_ppm">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="tooltip_text" translatable="yes">Crystal Error Correction (PPM)</property>
@@ -711,7 +711,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="lblGain2">
+                          <object class="GtkLabel" id="lbl_gain2">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="xpad">10</property>
@@ -728,7 +728,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="lblGain4">
+                          <object class="GtkLabel" id="lbl_gain4">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="xpad">10</property>
@@ -743,7 +743,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkSpinButton" id="spinRTL">
+                          <object class="GtkSpinButton" id="spin_rtl">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="tooltip_text" translatable="yes">RTL-SDR Device Number (Default = 0)</property>
@@ -857,7 +857,7 @@
                         <property name="n_rows">2</property>
                         <property name="n_columns">2</property>
                         <child>
-                          <object class="GtkImage" id="imgMap">
+                          <object class="GtkImage" id="img_map">
                             <property name="width_request">200</property>
                             <property name="height_request">200</property>
                             <property name="visible">True</property>
@@ -1003,7 +1003,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry" id="txtTitle">
+                      <object class="GtkEntry" id="txt_title">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="editable">False</property>
@@ -1018,7 +1018,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry" id="txtArtist">
+                      <object class="GtkEntry" id="txt_artist">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="editable">False</property>
@@ -1035,7 +1035,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry" id="txtAlbum">
+                      <object class="GtkEntry" id="txt_album">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="editable">False</property>
@@ -1076,7 +1076,7 @@
             <property name="can_focus">False</property>
             <property name="n_columns">4</property>
             <child>
-              <object class="GtkLabel" id="lblCall">
+              <object class="GtkLabel" id="lbl_callsign">
                 <property name="height_request">25</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -1089,7 +1089,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="lblBitRate">
+              <object class="GtkLabel" id="lbl_bitrate">
                 <property name="height_request">25</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -1103,7 +1103,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="lblError">
+              <object class="GtkLabel" id="lbl_error">
                 <property name="height_request">0</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -1118,7 +1118,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="lblGain">
+              <object class="GtkLabel" id="lbl_gain">
                 <property name="height_request">25</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>

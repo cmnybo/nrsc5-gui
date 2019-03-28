@@ -60,21 +60,21 @@ class NRSC5_GUI(object):
         self.audio_queue = queue.Queue(maxsize=64)
         self.audio_thread = threading.Thread(target=self.audio_worker)
         self.playing = False            # currently playing
-        self.statusTimer = None         # status update timer
-        self.imageChanged = False       # has the album art changed
-        self.xhdrChanged = False        # has the HDDR data changed
-        self.lastImage = ""             # last image file displayed
-        self.lastXHDR = ""              # the last XHDR data received
-        self.stationStr = ""            # current station frequency (string)
-        self.streamNum = 0              # current station stream number
+        self.status_timer = None        # status update timer
+        self.image_changed = False      # has the album art changed
+        self.xhdr_changed = False       # has the HDDR data changed
+        self.last_image = ""            # last image file displayed
+        self.last_xhdr = ""             # the last XHDR data received
+        self.station_str = ""           # current station frequency (string)
+        self.stream_num = 0             # current station stream number
         self.bookmarks = []             # station bookmarks
-        self.stationLogos = {}          # station logos
+        self.station_logos = {}         # station logos
         self.bookmarked = False         # is current station bookmarked
-        self.mapViewer = None           # map viewer window
-        self.weatherMaps = []           # list of current weathermaps sorted by time
-        self.trafficMap = Image.new("RGB", (600, 600), "white")
-        self.mapTiles = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
-        self.mapData = {
+        self.map_viewer = None          # map viewer window
+        self.weather_maps = []          # list of current weathermaps sorted by time
+        self.traffic_map = Image.new("RGB", (600, 600), "white")
+        self.map_tiles = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+        self.map_data = {
             "mapMode": 1,
             "weatherTime": 0,
             "weatherPos": [0, 0, 0, 0],
@@ -91,20 +91,20 @@ class NRSC5_GUI(object):
         }
 
         # setup bookmarks listview
-        nameRenderer = Gtk.CellRendererText()
-        nameRenderer.set_property("editable", True)
-        nameRenderer.connect("edited", self.on_bookmark_name_edited)
+        name_renderer = Gtk.CellRendererText()
+        name_renderer.set_property("editable", True)
+        name_renderer.connect("edited", self.on_bookmark_name_edited)
 
-        colStation = Gtk.TreeViewColumn("Station", Gtk.CellRendererText(), text=0)
-        colName = Gtk.TreeViewColumn("Name", nameRenderer, text=1)
+        col_station = Gtk.TreeViewColumn("Station", Gtk.CellRendererText(), text=0)
+        col_name = Gtk.TreeViewColumn("Name", name_renderer, text=1)
 
-        colStation.set_resizable(True)
-        colStation.set_sort_column_id(2)
-        colName.set_resizable(True)
-        colName.set_sort_column_id(1)
+        col_station.set_resizable(True)
+        col_station.set_sort_column_id(2)
+        col_name.set_resizable(True)
+        col_name.set_sort_column_id(1)
 
-        self.lv_bookmarks.append_column(colStation)
-        self.lv_bookmarks.append_column(colName)
+        self.lv_bookmarks.append_column(col_station)
+        self.lv_bookmarks.append_column(col_name)
 
         self.loadSettings()
         self.processWeatherMaps()
@@ -112,54 +112,54 @@ class NRSC5_GUI(object):
         self.audio_thread.start()
 
     def display_logo(self):
-        if self.stationStr in self.stationLogos:
+        if self.station_str in self.station_logos:
             # show station logo if it's cached
-            logo = os.path.join(self.aasDir, self.stationLogos[self.stationStr][self.streamNum])
+            logo = os.path.join(self.aas_dir, self.station_logos[self.station_str][self.stream_num])
             if os.path.isfile(logo):
-                self.streamInfo["Logo"] = self.stationLogos[self.stationStr][self.streamNum]
+                self.stream_info["Logo"] = self.station_logos[self.station_str][self.stream_num]
                 pixbuf = GdkPixbuf.Pixbuf.new_from_file(logo)
                 pixbuf = pixbuf.scale_simple(200, 200, GdkPixbuf.InterpType.HYPER)
-                self.imgCover.set_from_pixbuf(pixbuf)
+                self.img_cover.set_from_pixbuf(pixbuf)
         else:
             # add entry in database for the station if it doesn't exist
-            self.stationLogos[self.stationStr] = ["", "", "", ""]
+            self.station_logos[self.station_str] = ["", "", "", ""]
 
     def on_btn_play_clicked(self, _btn):
         # start playback
         if not self.playing:
 
             # update all of the spin buttons to prevent the text from sticking
-            self.spinFreq.update()
+            self.spin_freq.update()
             self.spin_stream.update()
-            self.spinGain.update()
-            self.spinPPM.update()
-            self.spinRTL.update()
+            self.spin_gain.update()
+            self.spin_ppm.update()
+            self.spin_rtl.update()
 
             # start the timer
-            self.statusTimer = threading.Timer(1, self.checkStatus)
-            self.statusTimer.start()
+            self.status_timer = threading.Timer(1, self.checkStatus)
+            self.status_timer.start()
 
             # disable the controls
-            self.spinFreq.set_sensitive(False)
-            self.spinGain.set_sensitive(False)
-            self.spinPPM.set_sensitive(False)
-            self.spinRTL.set_sensitive(False)
+            self.spin_freq.set_sensitive(False)
+            self.spin_gain.set_sensitive(False)
+            self.spin_ppm.set_sensitive(False)
+            self.spin_rtl.set_sensitive(False)
             self.btn_play.set_sensitive(False)
             self.btn_stop.set_sensitive(True)
             self.cb_auto_gain.set_sensitive(False)
             self.playing = True
-            self.lastXHDR = ""
+            self.last_xhdr = ""
 
             self.play()
 
-            self.stationStr = str(self.spinFreq.get_value())
-            self.streamNum = int(self.spin_stream.get_value())-1
+            self.station_str = str(self.spin_freq.get_value())
+            self.stream_num = int(self.spin_stream.get_value())-1
 
             self.display_logo()
 
             # check if station is bookmarked
             self.bookmarked = False
-            freq = int((self.spinFreq.get_value()+0.005)*100) + int(self.spin_stream.get_value())
+            freq = int((self.spin_freq.get_value()+0.005)*100) + int(self.spin_stream.get_value())
             for b in self.bookmarks:
                 if b[2] == freq:
                     self.bookmarked = True
@@ -181,15 +181,15 @@ class NRSC5_GUI(object):
                 self.radio = None
 
             # stop timer
-            self.statusTimer.cancel()
-            self.statusTimer = None
+            self.status_timer.cancel()
+            self.status_timer = None
 
             # enable controls
             if not self.cb_auto_gain.get_active():
-                self.spinGain.set_sensitive(True)
-            self.spinFreq.set_sensitive(True)
-            self.spinPPM.set_sensitive(True)
-            self.spinRTL.set_sensitive(True)
+                self.spin_gain.set_sensitive(True)
+            self.spin_freq.set_sensitive(True)
+            self.spin_ppm.set_sensitive(True)
+            self.spin_rtl.set_sensitive(True)
             self.btn_play.set_sensitive(True)
             self.btn_stop.set_sensitive(False)
             self.btn_bookmark.set_sensitive(False)
@@ -204,17 +204,17 @@ class NRSC5_GUI(object):
 
     def on_btn_bookmark_clicked(self, _btn):
         # pack frequency and channel number into one int
-        freq = int((self.spinFreq.get_value()+0.005)*100) + int(self.spin_stream.get_value())
+        freq = int((self.spin_freq.get_value()+0.005)*100) + int(self.spin_stream.get_value())
 
         # create bookmark
         bookmark = [
-            "{:4.1f}-{:1.0f}".format(self.spinFreq.get_value(), self.spin_stream.get_value()),
-            self.streamInfo["Callsign"],
+            "{:4.1f}-{:1.0f}".format(self.spin_freq.get_value(), self.spin_stream.get_value()),
+            self.stream_info["Callsign"],
             freq
         ]
-        self.bookmarked = True                  # mark as bookmarked
-        self.bookmarks.append(bookmark)         # store bookmark in array
-        self.lsBookmarks.append(bookmark)       # add bookmark to listview
+        self.bookmarked = True                   # mark as bookmarked
+        self.bookmarks.append(bookmark)          # store bookmark in array
+        self.lsBookmarks.append(bookmark)        # add bookmark to listview
         self.btn_bookmark.set_sensitive(False)   # disable bookmark button
 
         if self.notebook_main.get_current_page() != 3:
@@ -223,7 +223,7 @@ class NRSC5_GUI(object):
     def on_btn_delete_clicked(self, _btn):
         # select current station if not on bookmarks page
         if self.notebook_main.get_current_page() != 3:
-            station = int((self.spinFreq.get_value()+0.005)*100) + int(self.spin_stream.get_value())
+            station = int((self.spin_freq.get_value()+0.005)*100) + int(self.spin_stream.get_value())
             for i in range(len(self.lsBookmarks)):
                 if self.lsBookmarks[i][2] == station:
                     self.lv_bookmarks.set_cursor(i)
@@ -275,7 +275,7 @@ class NRSC5_GUI(object):
         along with this program.  If not, see <https://www.gnu.org/licenses/>."""
 
         about_dialog = Gtk.AboutDialog()
-        about_dialog.set_transient_for(self.mainWindow)
+        about_dialog.set_transient_for(self.main_window)
         about_dialog.set_destroy_with_parent(True)
         about_dialog.set_name("NRSC5 GUI")
         about_dialog.set_version("1.1.2")
@@ -302,20 +302,20 @@ class NRSC5_GUI(object):
         about_dialog.show()
 
     def on_spin_stream_value_changed(self, _spin):
-        self.lastXHDR = ""
-        self.streamInfo["Title"] = ""
-        self.streamInfo["Album"] = ""
-        self.streamInfo["Artist"] = ""
-        self.streamInfo["Cover"] = ""
-        self.streamInfo["Logo"] = ""
-        self.streamInfo["Bitrate"] = 0
-        self.streamNum = int(self.spin_stream.get_value())-1
+        self.last_xhdr = ""
+        self.stream_info["Title"] = ""
+        self.stream_info["Album"] = ""
+        self.stream_info["Artist"] = ""
+        self.stream_info["Cover"] = ""
+        self.stream_info["Logo"] = ""
+        self.stream_info["Bitrate"] = 0
+        self.stream_num = int(self.spin_stream.get_value())-1
         if self.playing:
             self.display_logo()
 
     def on_cb_auto_gain_toggled(self, btn):
-        self.spinGain.set_sensitive(not btn.get_active())
-        self.lblGain.set_visible(btn.get_active())
+        self.spin_gain.set_sensitive(not btn.get_active())
+        self.lbl_gain.set_visible(btn.get_active())
 
     def on_lv_bookmarks_row_activated(self, treeview, path, _view_column):
         if path:
@@ -324,7 +324,7 @@ class NRSC5_GUI(object):
             station = treeview.get_model().get_value(tree_iter, 2)
 
             # set frequency and stream
-            self.spinFreq.set_value(float(int(station/10)/10.0))
+            self.spin_freq.set_value(float(int(station/10)/10.0))
             self.spin_stream.set_value(station % 10)
 
             # stop playback if playing
@@ -365,43 +365,43 @@ class NRSC5_GUI(object):
     def on_rad_map_toggled(self, btn):
         if btn.get_active():
             if btn == self.rad_map_traffic:
-                self.mapData["mapMode"] = 0
+                self.map_data["mapMode"] = 0
                 mapFile = os.path.join("map", "TrafficMap.png")
                 if os.path.isfile(mapFile):                                                             # check if map exists
-                    mapImg = Image.open(mapFile).resize((200, 200), Image.LANCZOS)                      # scale map to fit window
-                    self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display
+                    map_img = Image.open(mapFile).resize((200, 200), Image.LANCZOS)                     # scale map to fit window
+                    self.img_map.set_from_pixbuf(imgToPixbuf(map_img))                                  # convert image to pixbuf and display
                 else:
-                    self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)     # display missing image if file is not found
+                    self.img_map.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)    # display missing image if file is not found
 
             elif btn == self.rad_map_weather:
-                self.mapData["mapMode"] = 1
-                if os.path.isfile(self.mapData["weatherNow"]):
-                    mapImg = Image.open(self.mapData["weatherNow"]).resize((200, 200), Image.LANCZOS)   # scale map to fit window
-                    self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                    # convert image to pixbuf and display
+                self.map_data["mapMode"] = 1
+                if os.path.isfile(self.map_data["weatherNow"]):
+                    map_img = Image.open(self.map_data["weatherNow"]).resize((200, 200), Image.LANCZOS) # scale map to fit window
+                    self.img_map.set_from_pixbuf(imgToPixbuf(map_img))                                  # convert image to pixbuf and display
                 else:
-                    self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)     # display missing image if file is not found
+                    self.img_map.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)    # display missing image if file is not found
 
     def on_btn_map_clicked(self, _btn):
         # open map viewer window
-        if self.mapViewer is None:
-            self.mapViewer = NRSC5_Map(self, self.mapViewerCallback, self.mapData)
-            self.mapViewer.map_window.show()
+        if self.map_viewer is None:
+            self.map_viewer = NRSC5_Map(self, self.map_viewerCallback, self.map_data)
+            self.map_viewer.map_window.show()
 
-    def mapViewerCallback(self):
+    def map_viewerCallback(self):
         # delete the map viewer
-        self.mapViewer = None
+        self.map_viewer = None
 
     def play(self):
         self.radio = nrsc5.NRSC5(lambda type, evt: self.callback(type, evt))
-        self.radio.open(int(self.spinRTL.get_value()), int(self.spinPPM.get_value()))
+        self.radio.open(int(self.spin_rtl.get_value()), int(self.spin_ppm.get_value()))
         self.radio.set_auto_gain(self.cb_auto_gain.get_active())
 
         # set gain if auto gain is not selected
         if not self.cb_auto_gain.get_active():
-            self.streamInfo["Gain"] = self.spinGain.get_value()
-            self.radio.set_gain(self.streamInfo["Gain"])
+            self.stream_info["Gain"] = self.spin_gain.get_value()
+            self.radio.set_gain(self.stream_info["Gain"])
 
-        self.radio.set_frequency(self.spinFreq.get_value() * 1e6)
+        self.radio.set_frequency(self.spin_freq.get_value() * 1e6)
         self.radio.start()
 
     def checkStatus(self):
@@ -411,56 +411,56 @@ class NRSC5_GUI(object):
             try:
                 imagePath = ""
                 image = ""
-                ber = [self.streamInfo["BER"][0]*100, self.streamInfo["BER"][1]*100, self.streamInfo["BER"][2]*100, self.streamInfo["BER"][3]*100]
-                self.txtTitle.set_text(self.streamInfo["Title"])
-                self.txtArtist.set_text(self.streamInfo["Artist"])
-                self.txtAlbum.set_text(self.streamInfo["Album"])
-                self.lblBitRate.set_label("{:3.1f} kbps".format(self.streamInfo["Bitrate"]))
-                self.lblBitRate2.set_label("{:3.1f} kbps".format(self.streamInfo["Bitrate"]))
-                self.lblError.set_label("{:2.2f}% Error ".format(ber[1]))
-                self.lblCall.set_label(" " + self.streamInfo["Callsign"])
-                self.lblName.set_label(self.streamInfo["Callsign"])
-                self.lblSlogan.set_label(self.streamInfo["Slogan"])
-                self.lblSlogan.set_tooltip_text(self.streamInfo["Slogan"])
-                self.lblMerLower.set_label("{:1.2f} dB".format(self.streamInfo["MER"][0]))
-                self.lblMerUpper.set_label("{:1.2f} dB".format(self.streamInfo["MER"][1]))
-                self.lblBerNow.set_label("{:1.3f}% (Now)".format(ber[0]))
-                self.lblBerAvg.set_label("{:1.3f}% (Avg)".format(ber[1]))
-                self.lblBerMin.set_label("{:1.3f}% (Min)".format(ber[2]))
-                self.lblBerMax.set_label("{:1.3f}% (Max)".format(ber[3]))
+                ber = [self.stream_info["BER"][0]*100, self.stream_info["BER"][1]*100, self.stream_info["BER"][2]*100, self.stream_info["BER"][3]*100]
+                self.txt_title.set_text(self.stream_info["Title"])
+                self.txt_artist.set_text(self.stream_info["Artist"])
+                self.txt_album.set_text(self.stream_info["Album"])
+                self.lbl_bitrate.set_label("{:3.1f} kbps".format(self.stream_info["Bitrate"]))
+                self.lbl_bitrate2.set_label("{:3.1f} kbps".format(self.stream_info["Bitrate"]))
+                self.lbl_error.set_label("{:2.2f}% Error ".format(ber[1]))
+                self.lbl_callsign.set_label(" " + self.stream_info["Callsign"])
+                self.lbl_name.set_label(self.stream_info["Callsign"])
+                self.lbl_slogan.set_label(self.stream_info["Slogan"])
+                self.lbl_slogan.set_tooltip_text(self.stream_info["Slogan"])
+                self.lbl_mer_lower.set_label("{:1.2f} dB".format(self.stream_info["MER"][0]))
+                self.lbl_mer_upper.set_label("{:1.2f} dB".format(self.stream_info["MER"][1]))
+                self.lbl_ber_now.set_label("{:1.3f}% (Now)".format(ber[0]))
+                self.lbl_ber_avg.set_label("{:1.3f}% (Avg)".format(ber[1]))
+                self.lbl_ber_min.set_label("{:1.3f}% (Min)".format(ber[2]))
+                self.lbl_ber_max.set_label("{:1.3f}% (Max)".format(ber[3]))
 
                 if self.cb_auto_gain.get_active():
-                    self.spinGain.set_value(self.streamInfo["Gain"])
-                    self.lblGain.set_label("{:2.1f}dB".format(self.streamInfo["Gain"]))
+                    self.spin_gain.set_value(self.stream_info["Gain"])
+                    self.lbl_gain.set_label("{:2.1f}dB".format(self.stream_info["Gain"]))
 
-                if self.lastXHDR == 0:
-                    imagePath = os.path.join(self.aasDir, self.streamInfo["Cover"])
-                    image = self.streamInfo["Cover"]
-                elif self.lastXHDR == 1:
-                    imagePath = os.path.join(self.aasDir, self.streamInfo["Logo"])
-                    image = self.streamInfo["Logo"]
+                if self.last_xhdr == 0:
+                    imagePath = os.path.join(self.aas_dir, self.stream_info["Cover"])
+                    image = self.stream_info["Cover"]
+                elif self.last_xhdr == 1:
+                    imagePath = os.path.join(self.aas_dir, self.stream_info["Logo"])
+                    image = self.stream_info["Logo"]
                     if not os.path.isfile(imagePath):
-                        self.imgCover.clear()
+                        self.img_cover.clear()
 
                 # resize and display image if it changed and exists
-                if self.xhdrChanged and self.lastImage != image and os.path.isfile(imagePath):
-                    self.xhdrChanged = False
-                    self.lastImage = image
+                if self.xhdr_changed and self.last_image != image and os.path.isfile(imagePath):
+                    self.xhdr_changed = False
+                    self.last_image = image
                     pixbuf = GdkPixbuf.Pixbuf.new_from_file(imagePath)
                     pixbuf = pixbuf.scale_simple(200, 200, GdkPixbuf.InterpType.HYPER)
-                    self.imgCover.set_from_pixbuf(pixbuf)
+                    self.img_cover.set_from_pixbuf(pixbuf)
                     logging.debug("Image changed")
             finally:
                 Gdk.threads_leave()
 
         if self.playing:
             GObject.idle_add(update)
-            self.statusTimer = threading.Timer(1, self.checkStatus)
-            self.statusTimer.start()
+            self.status_timer = threading.Timer(1, self.checkStatus)
+            self.status_timer.start()
 
-    def processTrafficMap(self, fileName, data):
+    def processTrafficMap(self, filename, data):
         r = re.compile(r"^TMT_.*_([1-3])_([1-3])_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2}).*$")              # match file name
-        m = r.match(fileName)
+        m = r.match(filename)
 
         if m:
             x = int(m.group(1))-1  # X position
@@ -471,78 +471,78 @@ class NRSC5_GUI(object):
             ts = dtToTs(dt)                                                                             # unix timestamp (utc)
 
             # check if the tile has already been loaded
-            if self.mapTiles[x][y] == ts:
+            if self.map_tiles[x][y] == ts:
                 return                                                                                  # no need to recreate the map if it hasn't changed
 
             logging.debug("Got traffic map tile: %s, %s", x, y)
 
-            self.mapTiles[x][y] = ts                                                                    # store time for current tile
-            self.trafficMap.paste(Image.open(io.BytesIO(data)), (y*200, x*200))                         # paste tile into map
+            self.map_tiles[x][y] = ts                                                                   # store time for current tile
+            self.traffic_map.paste(Image.open(io.BytesIO(data)), (y*200, x*200))                        # paste tile into map
 
             # check if all of the tiles are loaded
             if self.checkTiles(ts):
                 logging.debug("Got complete traffic map")
-                self.trafficMap.save(os.path.join("map", "TrafficMap.png"))                             # save traffic map
+                self.traffic_map.save(os.path.join("map", "TrafficMap.png"))                            # save traffic map
 
                 # display on map page
                 if self.rad_map_traffic.get_active():
-                    imgMap = self.trafficMap.resize((200, 200), Image.LANCZOS)                          # scale map to fit window
-                    self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
+                    img_map = self.traffic_map.resize((200, 200), Image.LANCZOS)                        # scale map to fit window
+                    self.img_map.set_from_pixbuf(imgToPixbuf(img_map))                                  # convert image to pixbuf and display
 
-                if self.mapViewer is not None:
-                    self.mapViewer.updated()                                                            # notify map viwerer if it's open
+                if self.map_viewer is not None:
+                    self.map_viewer.updated()                                                           # notify map viwerer if it's open
 
-    def processWeatherOverlay(self, fileName, data):
+    def processWeatherOverlay(self, filename, data):
         r = re.compile(r"^DWRO_(.*)_.*_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2}).*$")                        # match file name
-        m = r.match(fileName)
+        m = r.match(filename)
 
         if m:
             # get time from map tile and convert to local time
             dt = datetime.datetime(int(m.group(2)), int(m.group(3)), int(m.group(4)), int(m.group(5)), int(m.group(6)), tzinfo=tz.tzutc())
             t = dt.astimezone(tz.tzlocal())                                                             # local time
             ts = dtToTs(dt)                                                                             # unix timestamp (utc)
-            map_id = self.mapData["weatherID"]
+            map_id = self.map_data["weatherID"]
 
             if m.group(1) != map_id:
                 logging.error("Received weather overlay with the wrong ID: %s", m.group(1))
                 return
 
-            if self.mapData["weatherTime"] == ts:
+            if self.map_data["weatherTime"] == ts:
                 return                                                                                  # no need to recreate the map if it hasn't changed
 
             logging.debug("Got weather overlay")
 
-            self.mapData["weatherTime"] = ts                                                            # store time for current overlay
+            self.map_data["weatherTime"] = ts                                                           # store time for current overlay
             wxMapPath = os.path.join("map", "WeatherMap_{}_{}.png".format(map_id, ts))
 
             # create weather map
             try:
-                mapPath = os.path.join("map", "BaseMap_" + map_id + ".png")                             # get path to base map
-                if not os.path.isfile(mapPath):                                                         # make sure base map exists
-                    self.makeBaseMap(self.mapData["weatherID"], self.mapData["weatherPos"])             # create base map if it doesn't exist
+                map_path = os.path.join("map", "BaseMap_" + map_id + ".png")                            # get path to base map
+                if not os.path.isfile(map_path):                                                        # make sure base map exists
+                    self.makeBaseMap(self.map_data["weatherID"], self.map_data["weatherPos"])           # create base map if it doesn't exist
 
-                imgMap = Image.open(mapPath).convert("RGBA")                                            # open map image
-                posTS = (imgMap.size[0]-235, imgMap.size[1]-29)                                         # calculate position to put timestamp (bottom right)
-                imgTS = self.mkTimestamp(t, imgMap.size, posTS)                                         # create timestamp
+                img_map = Image.open(map_path).convert("RGBA")                                          # open map image
+                posTS = (img_map.size[0]-235, img_map.size[1]-29)                                       # calculate position to put timestamp (bottom right)
+                imgTS = self.mkTimestamp(t, img_map.size, posTS)                                        # create timestamp
                 imgRadar = Image.open(io.BytesIO(data)).convert("RGBA")                                 # open radar overlay
-                imgRadar = imgRadar.resize(imgMap.size, Image.LANCZOS)                                  # resize radar overlay to fit the map
-                imgMap = Image.alpha_composite(imgMap, imgRadar)                                        # overlay radar image on map
-                imgMap = Image.alpha_composite(imgMap, imgTS)                                           # overlay timestamp
-                imgMap.save(wxMapPath)                                                                  # save weather map
-                self.mapData["weatherNow"] = wxMapPath
+                imgRadar = imgRadar.resize(img_map.size, Image.LANCZOS)                                 # resize radar overlay to fit the map
+                img_map = Image.alpha_composite(img_map, imgRadar)                                      # overlay radar image on map
+                img_map = Image.alpha_composite(img_map, imgTS)                                         # overlay timestamp
+                img_map.save(wxMapPath)                                                                 # save weather map
+                self.map_data["weatherNow"] = wxMapPath
 
                 # display on map page
                 if self.rad_map_weather.get_active():
-                    imgMap = imgMap.resize((200, 200), Image.LANCZOS)                                   # scale map to fit window
-                    self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
+                    img_map = img_map.resize((200, 200), Image.LANCZOS)                                 # scale map to fit window
+                    self.img_map.set_from_pixbuf(imgToPixbuf(img_map))                                  # convert image to pixbuf and display
 
                 self.processWeatherMaps()                                                               # get rid of old maps and add new ones to the list
-                if self.mapViewer is not None:
-                    self.mapViewer.updated()                                                            # notify map viwerer if it's open
+                if self.map_viewer is not None:
+                    self.map_viewer.updated()                                                           # notify map viwerer if it's open
 
             except OSError:
                 logging.error("Error creating weather map")
-                self.mapData["weatherTime"] = 0
+                self.map_data["weatherTime"] = 0
 
     def processWeatherInfo(self, data):
         weatherID = None
@@ -562,13 +562,13 @@ class NRSC5_GUI(object):
                 weatherPos = [float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4))]
 
         if weatherID is not None and weatherPos is not None:                                            # check if ID and position were found
-            if self.mapData["weatherID"] != weatherID or self.mapData["weatherPos"] != weatherPos:      # check if ID or position has changed
+            if self.map_data["weatherID"] != weatherID or self.map_data["weatherPos"] != weatherPos:    # check if ID or position has changed
                 logging.debug("Got position: (%n, %n) (%n, %n)", *weatherPos)
-                self.mapData["weatherID"] = weatherID                                                   # set weather ID
-                self.mapData["weatherPos"] = weatherPos                                                 # set weather map position
+                self.map_data["weatherID"] = weatherID                                                  # set weather ID
+                self.map_data["weatherPos"] = weatherPos                                                # set weather map position
 
                 self.makeBaseMap(weatherID, weatherPos)
-                self.weatherMaps = []
+                self.weather_maps = []
                 self.processWeatherMaps()
 
     def processWeatherMaps(self):
@@ -586,17 +586,17 @@ class NRSC5_GUI(object):
                 # remove weather maps older than 12 hours
                 if now - ts > 60*60*12:
                     try:
-                        if f in self.weatherMaps:
-                            self.weatherMaps.pop(self.weatherMaps.index(f))                             # remove from list
+                        if f in self.weather_maps:
+                            self.weather_maps.pop(self.weather_maps.index(f))                           # remove from list
                         os.remove(f)                                                                    # remove file
                         logging.debug("Deleted old weather map: %s", f)
                     except OSError:
                         logging.error("Failed to delete old weather map: %s", f)
 
                 # skip if not the correct location
-                elif map_id == self.mapData["weatherID"]:
-                    if f not in self.weatherMaps:
-                        self.weatherMaps.append(f)                                                      # add to list
+                elif map_id == self.map_data["weatherID"]:
+                    if f not in self.weather_maps:
+                        self.weather_maps.append(f)                                                     # add to list
                     numberOfMaps += 1
 
         logging.debug("Found %s weather maps", numberOfMaps)
@@ -617,24 +617,24 @@ class NRSC5_GUI(object):
         return (int(round(x1)), int(round(y1)), int(round(x2)), int(round(y2)))
 
     def makeBaseMap(self, map_id, pos):
-        mapPath = os.path.join("map", "BaseMap_" + map_id + ".png")                             # get map path
+        map_path = os.path.join("map", "BaseMap_" + map_id + ".png")                            # get map path
         if os.path.isfile(self.MAP_FILE):
-            if not os.path.isfile(mapPath):                                                     # check if the map has already been created for this location
-                logging.debug("Creating new map: %s", mapPath)
+            if not os.path.isfile(map_path):                                                    # check if the map has already been created for this location
+                logging.debug("Creating new map: %s", map_path)
                 px = self.getMapArea(*pos)                                                      # convert map locations to pixel coordinates
-                mapImg = Image.open(self.MAP_FILE).crop(px)                                     # open the full map and crop it to the coordinates
-                mapImg.save(mapPath)                                                            # save the cropped map to disk for later use
+                map_img = Image.open(self.MAP_FILE).crop(px)                                    # open the full map and crop it to the coordinates
+                map_img.save(map_path)                                                          # save the cropped map to disk for later use
                 logging.debug("Finished creating map")
         else:
             logging.error("Map file not found: %s", self.MAP_FILE)
-            mapImg = Image.new("RGBA", (pos[2]-pos[1], pos[3]-pos[1]), "white")                 # if the full map is not available, use a blank image
-            mapImg.save(mapPath)
+            map_img = Image.new("RGBA", (pos[2]-pos[1], pos[3]-pos[1]), "white")                # if the full map is not available, use a blank image
+            map_img.save(map_path)
 
     def checkTiles(self, t):
         # check if all the tiles have been received
         for i in range(3):
             for j in range(3):
-                if self.mapTiles[i][j] != t:
+                if self.map_tiles[i][j] != t:
                     return False
         return True
 
@@ -677,13 +677,13 @@ class NRSC5_GUI(object):
 
     def update_bitrate(self, bits):
         kbps = bits * self.AUDIO_SAMPLE_RATE / self.AUDIO_SAMPLES_PER_FRAME / 1000
-        if self.streamInfo["Bitrate"] == 0:
-            self.streamInfo["Bitrate"] = kbps
+        if self.stream_info["Bitrate"] == 0:
+            self.stream_info["Bitrate"] = kbps
         else:
-            self.streamInfo["Bitrate"] = 0.99 * self.streamInfo["Bitrate"] + 0.01 * kbps
+            self.stream_info["Bitrate"] = 0.99 * self.stream_info["Bitrate"] + 0.01 * kbps
 
     def update_ber(self, cber):
-        ber = self.streamInfo["BER"]
+        ber = self.stream_info["BER"]
         if ber[0] == ber[1] == ber[2] == ber[3] == 0:
             ber[0] = cber
             ber[1] = cber
@@ -701,32 +701,32 @@ class NRSC5_GUI(object):
         if evt_type == nrsc5.EventType.LOST_DEVICE:
             pass  # TODO: update the GUI?
         elif evt_type == nrsc5.EventType.SYNC:
-            self.streamInfo["Gain"] = self.radio.get_gain()
+            self.stream_info["Gain"] = self.radio.get_gain()
             # TODO: update the GUI?
         elif evt_type == nrsc5.EventType.LOST_SYNC:
             pass  # TODO: update the GUI?
         elif evt_type == nrsc5.EventType.MER:
-            self.streamInfo["MER"] = [evt.lower, evt.upper]
+            self.stream_info["MER"] = [evt.lower, evt.upper]
         elif evt_type == nrsc5.EventType.BER:
             self.update_ber(evt.cber)
         elif evt_type == nrsc5.EventType.HDC:
-            if evt.program == self.streamNum:
+            if evt.program == self.stream_num:
                 self.update_bitrate(len(evt.data) * 8)
         elif evt_type == nrsc5.EventType.AUDIO:
-            if evt.program == self.streamNum:
+            if evt.program == self.stream_num:
                 self.audio_queue.put(evt.data)
         elif evt_type == nrsc5.EventType.ID3:
-            if evt.program == self.streamNum:
+            if evt.program == self.stream_num:
                 if evt.title:
-                    self.streamInfo["Title"] = evt.title
+                    self.stream_info["Title"] = evt.title
                 if evt.artist:
-                    self.streamInfo["Artist"] = evt.artist
+                    self.stream_info["Artist"] = evt.artist
                 if evt.album:
-                    self.streamInfo["Album"] = evt.album
+                    self.stream_info["Album"] = evt.album
                 if evt.xhdr:
-                    if evt.xhdr.param != self.lastXHDR:
-                        self.lastXHDR = evt.xhdr.param
-                        self.xhdrChanged = True
+                    if evt.xhdr.param != self.last_xhdr:
+                        self.last_xhdr = evt.xhdr.param
+                        self.xhdr_changed = True
                         logging.debug("XHDR changed: %s", evt.xhdr.param)
         elif evt_type == nrsc5.EventType.SIG:
             for service in evt:
@@ -741,44 +741,44 @@ class NRSC5_GUI(object):
                     for component in service.components:
                         if component.type == nrsc5.ComponentType.DATA:
                             if component.data.mime == nrsc5.MIMEType.TTN_STM_TRAFFIC:
-                                self.trafficPort = component.data.port
+                                self.traffic_port = component.data.port
                             elif component.data.mime == nrsc5.MIMEType.TTN_STM_WEATHER:
-                                self.weatherPort = component.data.port
+                                self.weather_port = component.data.port
         elif evt_type == nrsc5.EventType.LOT:
             logging.debug("LOT port=%s", evt.port)
 
-            if self.mapDir is not None:
-                if evt.port == self.trafficPort:
+            if self.map_dir is not None:
+                if evt.port == self.traffic_port:
                     if evt.name.startswith("TMT_"):
                         self.processTrafficMap(evt.name, evt.data)
-                elif evt.port == self.weatherPort:
+                elif evt.port == self.weather_port:
                     if evt.name.startswith("DWRO_"):
                         self.processWeatherOverlay(evt.name, evt.data)
                     elif evt.name.startswith("DWRI_"):
                         self.processWeatherInfo(evt.data)
 
-            if self.aasDir is not None:
-                path = os.path.join(self.aasDir, evt.name)
+            if self.aas_dir is not None:
+                path = os.path.join(self.aas_dir, evt.name)
                 for i, stream in enumerate(self.streams):
                     if evt.port == stream.get("image"):
                         logging.debug("Got album cover: %s", evt.name)
                         with open(path, "wb") as f:
                             f.write(evt.data)
-                        if i == self.streamNum:
-                            self.streamInfo["Cover"] = evt.name
+                        if i == self.stream_num:
+                            self.stream_info["Cover"] = evt.name
                     elif evt.port == stream.get("logo"):
                         logging.debug("Got station logo: %s", evt.name)
                         with open(path, "wb") as f:
                             f.write(evt.data)
-                        self.stationLogos[self.stationStr][i] = evt.name
-                        if i == self.streamNum:
-                            self.streamInfo["Logo"] = evt.name
+                        self.station_logos[self.station_str][i] = evt.name
+                        if i == self.stream_num:
+                            self.stream_info["Logo"] = evt.name
 
         elif evt_type == nrsc5.EventType.SIS:
             if evt.name:
-                self.streamInfo["Callsign"] = evt.name
+                self.stream_info["Callsign"] = evt.name
             if evt.slogan:
-                self.streamInfo["Slogan"] = evt.slogan
+                self.stream_info["Slogan"] = evt.slogan
 
     def getControls(self):
         # setup gui
@@ -787,20 +787,20 @@ class NRSC5_GUI(object):
         builder.connect_signals(self)
 
         # Windows
-        self.mainWindow = builder.get_object("mainWindow")
-        self.mainWindow.connect("delete-event", self.shutdown)
-        self.mainWindow.connect("destroy", Gtk.main_quit)
+        self.main_window = builder.get_object("main_window")
+        self.main_window.connect("delete-event", self.shutdown)
+        self.main_window.connect("destroy", Gtk.main_quit)
         self.about_dialog = None
 
         # get controls
         self.notebook_main = builder.get_object("notebook_main")
-        self.imgCover = builder.get_object("imgCover")
-        self.imgMap = builder.get_object("imgMap")
-        self.spinFreq = builder.get_object("spinFreq")
+        self.img_cover = builder.get_object("img_cover")
+        self.img_map = builder.get_object("img_map")
+        self.spin_freq = builder.get_object("spin_freq")
         self.spin_stream = builder.get_object("spin_stream")
-        self.spinGain = builder.get_object("spinGain")
-        self.spinPPM = builder.get_object("spinPPM")
-        self.spinRTL = builder.get_object("spinRTL")
+        self.spin_gain = builder.get_object("spin_gain")
+        self.spin_ppm = builder.get_object("spin_ppm")
+        self.spin_rtl = builder.get_object("spin_rtl")
         self.cb_auto_gain = builder.get_object("cb_auto_gain")
         self.btn_play = builder.get_object("btn_play")
         self.btn_stop = builder.get_object("btn_stop")
@@ -808,22 +808,22 @@ class NRSC5_GUI(object):
         self.btn_delete = builder.get_object("btn_delete")
         self.rad_map_traffic = builder.get_object("rad_map_traffic")
         self.rad_map_weather = builder.get_object("rad_map_weather")
-        self.txtTitle = builder.get_object("txtTitle")
-        self.txtArtist = builder.get_object("txtArtist")
-        self.txtAlbum = builder.get_object("txtAlbum")
-        self.lblName = builder.get_object("lblName")
-        self.lblSlogan = builder.get_object("lblSlogan")
-        self.lblCall = builder.get_object("lblCall")
-        self.lblGain = builder.get_object("lblGain")
-        self.lblBitRate = builder.get_object("lblBitRate")
-        self.lblBitRate2 = builder.get_object("lblBitRate2")
-        self.lblError = builder.get_object("lblError")
-        self.lblMerLower = builder.get_object("lblMerLower")
-        self.lblMerUpper = builder.get_object("lblMerUpper")
-        self.lblBerNow = builder.get_object("lblBerNow")
-        self.lblBerAvg = builder.get_object("lblBerAvg")
-        self.lblBerMin = builder.get_object("lblBerMin")
-        self.lblBerMax = builder.get_object("lblBerMax")
+        self.txt_title = builder.get_object("txt_title")
+        self.txt_artist = builder.get_object("txt_artist")
+        self.txt_album = builder.get_object("txt_album")
+        self.lbl_name = builder.get_object("lbl_name")
+        self.lbl_slogan = builder.get_object("lbl_slogan")
+        self.lbl_callsign = builder.get_object("lbl_callsign")
+        self.lbl_gain = builder.get_object("lbl_gain")
+        self.lbl_bitrate = builder.get_object("lbl_bitrate")
+        self.lbl_bitrate2 = builder.get_object("lbl_bitrate2")
+        self.lbl_error = builder.get_object("lbl_error")
+        self.lbl_mer_lower = builder.get_object("lbl_mer_lower")
+        self.lbl_mer_upper = builder.get_object("lbl_mer_upper")
+        self.lbl_ber_now = builder.get_object("lbl_ber_now")
+        self.lbl_ber_avg = builder.get_object("lbl_ber_avg")
+        self.lbl_ber_min = builder.get_object("lbl_ber_min")
+        self.lbl_ber_max = builder.get_object("lbl_ber_max")
         self.lv_bookmarks = builder.get_object("lv_bookmarks")
         self.lsBookmarks = Gtk.ListStore(str, str, int)
 
@@ -832,7 +832,7 @@ class NRSC5_GUI(object):
 
     def initStreamInfo(self):
         # stream information
-        self.streamInfo = {
+        self.stream_info = {
             "Callsign": "",         # station callsign
             "Slogan": "",           # station slogan
             "Title": "",            # track title
@@ -847,35 +847,35 @@ class NRSC5_GUI(object):
         }
 
         self.streams = [{}, {}, {}, {}]
-        self.trafficPort = -1
-        self.weatherPort = -1
+        self.traffic_port = -1
+        self.weather_port = -1
         self.lastType = 0
 
         # clear status info
-        self.lblCall.set_label("")
-        self.lblBitRate.set_label("")
-        self.lblBitRate2.set_label("")
-        self.lblError.set_label("")
-        self.lblGain.set_label("")
-        self.txtTitle.set_text("")
-        self.txtArtist.set_text("")
-        self.txtAlbum.set_text("")
-        self.imgCover.clear()
-        self.lblName.set_label("")
-        self.lblSlogan.set_label("")
-        self.lblSlogan.set_tooltip_text("")
-        self.lblMerLower.set_label("")
-        self.lblMerUpper.set_label("")
-        self.lblBerNow.set_label("")
-        self.lblBerAvg.set_label("")
-        self.lblBerMin.set_label("")
-        self.lblBerMax.set_label("")
+        self.lbl_callsign.set_label("")
+        self.lbl_bitrate.set_label("")
+        self.lbl_bitrate2.set_label("")
+        self.lbl_error.set_label("")
+        self.lbl_gain.set_label("")
+        self.txt_title.set_text("")
+        self.txt_artist.set_text("")
+        self.txt_album.set_text("")
+        self.img_cover.clear()
+        self.lbl_name.set_label("")
+        self.lbl_slogan.set_label("")
+        self.lbl_slogan.set_tooltip_text("")
+        self.lbl_mer_lower.set_label("")
+        self.lbl_mer_upper.set_label("")
+        self.lbl_ber_now.set_label("")
+        self.lbl_ber_avg.set_label("")
+        self.lbl_ber_min.set_label("")
+        self.lbl_ber_max.set_label("")
 
     def loadSettings(self):
         # load station logos
         try:
-            with open("stationLogos.json", mode="r") as f:
-                self.stationLogos = json.load(f)
+            with open("station_logos.json", mode="r") as f:
+                self.station_logos = json.load(f)
         except (OSError, json.decoder.JSONDecodeError):
             logging.warning("Unable to load station logo database")
 
@@ -885,24 +885,24 @@ class NRSC5_GUI(object):
                 config = json.load(f)
 
                 if "MapData" in config:
-                    self.mapData = config["MapData"]
-                    if self.mapData["mapMode"] == 0:
+                    self.map_data = config["MapData"]
+                    if self.map_data["mapMode"] == 0:
                         self.rad_map_traffic.set_active(True)
                         self.rad_map_traffic.toggled()
-                    elif self.mapData["mapMode"] == 1:
+                    elif self.map_data["mapMode"] == 1:
                         self.rad_map_weather.set_active(True)
                         self.rad_map_weather.toggled()
 
                 if "Width" and "Height" in config:
-                    self.mainWindow.resize(config["Width"], config["Height"])
+                    self.main_window.resize(config["Width"], config["Height"])
 
-                self.mainWindow.move(config["WindowX"], config["WindowY"])
-                self.spinFreq.set_value(config["Frequency"])
+                self.main_window.move(config["WindowX"], config["WindowY"])
+                self.spin_freq.set_value(config["Frequency"])
                 self.spin_stream.set_value(config["Stream"])
-                self.spinGain.set_value(config["Gain"])
+                self.spin_gain.set_value(config["Gain"])
                 self.cb_auto_gain.set_active(config["AutoGain"])
-                self.spinPPM.set_value(config["PPMError"])
-                self.spinRTL.set_value(config["RTL"])
+                self.spin_ppm.set_value(config["PPMError"])
+                self.spin_rtl.set_value(config["RTL"])
                 self.bookmarks = config["Bookmarks"]
                 for bookmark in self.bookmarks:
                     self.lsBookmarks.append(bookmark)
@@ -910,33 +910,33 @@ class NRSC5_GUI(object):
             logging.warning("Unable to load config")
 
         # create aas directory
-        self.aasDir = os.path.join(sys.path[0], "aas")
-        if not os.path.isdir(self.aasDir):
+        self.aas_dir = os.path.join(sys.path[0], "aas")
+        if not os.path.isdir(self.aas_dir):
             try:
-                os.mkdir(self.aasDir)
+                os.mkdir(self.aas_dir)
             except OSError:
                 logging.error("Unable to create AAS directory")
-                self.aasDir = None
+                self.aas_dir = None
 
         # create map directory
-        self.mapDir = os.path.join(sys.path[0], "map")
-        if not os.path.isdir(self.mapDir):
+        self.map_dir = os.path.join(sys.path[0], "map")
+        if not os.path.isdir(self.map_dir):
             try:
-                os.mkdir(self.mapDir)
+                os.mkdir(self.map_dir)
             except OSError:
                 logging.error("Unable to create map directory")
-                self.mapDir = None
+                self.map_dir = None
 
     def shutdown(self, *_args):
         # stop map viewer animation if it's running
-        if self.mapViewer is not None and self.mapViewer.animateTimer is not None:
-            self.mapViewer.animateTimer.cancel()
-            self.mapViewer.animateStop = True
+        if self.map_viewer is not None and self.map_viewer.animateTimer is not None:
+            self.map_viewer.animateTimer.cancel()
+            self.map_viewer.animateStop = True
 
-            while self.mapViewer.animateBusy:
+            while self.map_viewer.animateBusy:
                 logging.debug("Animation busy - stopping")
-                if self.mapViewer.animateTimer is not None:
-                    self.mapViewer.animateTimer.cancel()
+                if self.map_viewer.animateTimer is not None:
+                    self.map_viewer.animateTimer.cancel()
                 time.sleep(0.25)
 
         self.playing = False
@@ -948,8 +948,8 @@ class NRSC5_GUI(object):
             self.radio = None
 
         # shut down status timer if it's running
-        if self.statusTimer is not None:
-            self.statusTimer.cancel()
+        if self.status_timer is not None:
+            self.status_timer.cancel()
 
         self.audio_queue.put(None)
         self.audio_thread.join()
@@ -957,30 +957,30 @@ class NRSC5_GUI(object):
         # save settings
         try:
             with open("config.json", mode="w") as f:
-                winX, winY = self.mainWindow.get_position()
-                width, height = self.mainWindow.get_size()
+                winX, winY = self.main_window.get_position()
+                width, height = self.main_window.get_size()
                 config = {
                     "CfgVersion": "1.2.0",
                     "WindowX": winX,
                     "WindowY": winY,
                     "Width": width,
                     "Height": height,
-                    "Frequency": self.spinFreq.get_value(),
+                    "Frequency": self.spin_freq.get_value(),
                     "Stream": int(self.spin_stream.get_value()),
-                    "Gain": self.spinGain.get_value(),
+                    "Gain": self.spin_gain.get_value(),
                     "AutoGain": self.cb_auto_gain.get_active(),
-                    "PPMError": int(self.spinPPM.get_value()),
-                    "RTL": int(self.spinRTL.get_value()),
+                    "PPMError": int(self.spin_ppm.get_value()),
+                    "RTL": int(self.spin_rtl.get_value()),
                     "Bookmarks": self.bookmarks,
-                    "MapData": self.mapData,
+                    "MapData": self.map_data,
                 }
                 # sort bookmarks
                 config["Bookmarks"].sort(key=lambda t: t[2])
 
                 json.dump(config, f, indent=2)
 
-            with open("stationLogos.json", mode="w") as f:
-                json.dump(self.stationLogos, f, indent=2)
+            with open("station_logos.json", mode="w") as f:
+                json.dump(self.station_logos, f, indent=2)
         except OSError:
             logging.error("Unable to save config")
 
@@ -998,12 +998,12 @@ class NRSC5_Map(object):
         self.animateTimer = None                                                    # timer used to animate weather maps
         self.animateBusy = False
         self.animateStop = False
-        self.weatherMaps = parent.weatherMaps                                       # list of weather maps sorted by time
+        self.weather_maps = parent.weather_maps                                     # list of weather maps sorted by time
         self.mapIndex = 0                                                           # the index of the next weather map to display
 
         # get the controls
         self.map_window = builder.get_object("map_window")
-        self.imgMap = builder.get_object("imgMap")
+        self.img_map = builder.get_object("img_map")
         self.rad_map_weather = builder.get_object("rad_map_weather")
         self.rad_map_traffic = builder.get_object("rad_map_traffic")
         self.chk_animate = builder.get_object("chk_animate")
@@ -1065,15 +1065,15 @@ class NRSC5_Map(object):
             if self.animateTimer is not None:
                 self.animateTimer.cancel()                                                              # cancel the animation timer
                 self.animateTimer = None
-            self.mapIndex = len(self.weatherMaps)-1                                                     # reset the animation index
+            self.mapIndex = len(self.weather_maps)-1                                                    # reset the animation index
             self.setMap(self.config["mode"])                                                            # show the most recent map
 
     def on_chk_scale_toggled(self, btn):
         self.config["scale"] = btn.get_active()
         if self.config["mode"] == 1:
             if self.config["animate"]:
-                i = len(self.weatherMaps)-1 if (self.mapIndex-1 < 0) else self.mapIndex-1               # get the index for the current map in the animation
-                self.showImage(self.weatherMaps[i], self.config["scale"])                               # show the current map in the animation
+                i = len(self.weather_maps)-1 if (self.mapIndex-1 < 0) else self.mapIndex-1              # get the index for the current map in the animation
+                self.showImage(self.weather_maps[i], self.config["scale"])                              # show the current map in the animation
             else:
                 self.showImage(self.data["weatherNow"], self.config["scale"])                           # show the most recent map
 
@@ -1098,19 +1098,19 @@ class NRSC5_Map(object):
         self.callback()                                                                                 # run the callback
 
     def animate(self):
-        fileName = self.weatherMaps[self.mapIndex] if self.weatherMaps else ""
-        if os.path.isfile(fileName):
+        filename = self.weather_maps[self.mapIndex] if self.weather_maps else ""
+        if os.path.isfile(filename):
             self.animateBusy = True                                                                     # set busy to true
 
             if self.config["scale"]:
-                mapImg = imgToPixbuf(Image.open(fileName).resize((600, 600), Image.LANCZOS))            # open weather map, resize to 600x600, and convert to pixbuf
+                map_img = imgToPixbuf(Image.open(filename).resize((600, 600), Image.LANCZOS))           # open weather map, resize to 600x600, and convert to pixbuf
             else:
-                mapImg = imgToPixbuf(Image.open(fileName))                                              # open weather map and convert to pixbuf
+                map_img = imgToPixbuf(Image.open(filename))                                             # open weather map and convert to pixbuf
 
             if self.config["animate"] and self.config["mode"] == 1 and not self.animateStop:            # check if the viwer is set to animated weather map
-                self.imgMap.set_from_pixbuf(mapImg)                                                     # display image
+                self.img_map.set_from_pixbuf(map_img)                                                   # display image
                 self.mapIndex += 1                                                                      # incriment image index
-                if self.mapIndex >= len(self.weatherMaps):                                              # check if this is the last image
+                if self.mapIndex >= len(self.weather_maps):                                             # check if this is the last image
                     self.mapIndex = 0                                                                   # reset the map index
                     self.animateTimer = threading.Timer(2, self.animate)                                # show the last image for a longer time
                 else:
@@ -1125,16 +1125,16 @@ class NRSC5_Map(object):
             self.chk_animate.set_active(False)                                                          # stop animation if image was not found
             self.mapIndex = 0
 
-    def showImage(self, fileName, scale):
-        if os.path.isfile(fileName):
+    def showImage(self, filename, scale):
+        if os.path.isfile(filename):
             if scale:
-                mapImg = Image.open(fileName).resize((600, 600), Image.LANCZOS)                         # open and scale map to fit window
+                map_img = Image.open(filename).resize((600, 600), Image.LANCZOS)                        # open and scale map to fit window
             else:
-                mapImg = Image.open(fileName)                                                           # open map
+                map_img = Image.open(filename)                                                          # open map
 
-            self.imgMap.set_from_pixbuf(imgToPixbuf(mapImg))                                            # convert image to pixbuf and display
+            self.img_map.set_from_pixbuf(imgToPixbuf(map_img))                                          # convert image to pixbuf and display
         else:
-            self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)             # display missing image if file is not found
+            self.img_map.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)            # display missing image if file is not found
 
     def setMap(self, map_type):
         if map_type == 0:
@@ -1147,7 +1147,7 @@ class NRSC5_Map(object):
             self.setMap(0)
         elif self.config["mode"] == 1:
             self.setMap(1)
-            self.mapIndex = len(self.weatherMaps)-1
+            self.mapIndex = len(self.weather_maps)-1
 
 
 def dtToTs(dt):
@@ -1166,5 +1166,5 @@ if __name__ == "__main__":
     # show main window and start main thread
     os.chdir(sys.path[0])
     nrsc5_gui = NRSC5_GUI()
-    nrsc5_gui.mainWindow.show()
+    nrsc5_gui.main_window.show()
     Gtk.main()
