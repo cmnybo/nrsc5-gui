@@ -53,7 +53,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkToolButton" id="btnPlay">
+              <object class="GtkToolButton" id="btn_play">
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -61,7 +61,7 @@
                 <property name="label" translatable="yes">Play</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-media-play</property>
-                <signal name="clicked" handler="on_btnPlay_clicked" swapped="no"/>
+                <signal name="clicked" handler="on_btn_play_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -69,7 +69,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="btnStop">
+              <object class="GtkToolButton" id="btn_stop">
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
@@ -78,7 +78,7 @@
                 <property name="label" translatable="yes">Stop</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-media-stop</property>
-                <signal name="clicked" handler="on_btnStop_clicked" swapped="no"/>
+                <signal name="clicked" handler="on_btn_stop_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -97,7 +97,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="btnBookmark">
+              <object class="GtkToolButton" id="btn_bookmark">
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
@@ -106,7 +106,7 @@
                 <property name="label" translatable="yes">Add Bookmark</property>
                 <property name="use_underline">True</property>
                 <property name="icon_name">bookmark-new</property>
-                <signal name="clicked" handler="on_btnBookmark_clicked" swapped="no"/>
+                <signal name="clicked" handler="on_btn_bookmark_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -114,7 +114,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="btnDelete">
+              <object class="GtkToolButton" id="btn_delete">
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
@@ -123,7 +123,7 @@
                 <property name="label" translatable="yes">Delete Bookmark</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-delete</property>
-                <signal name="clicked" handler="on_btnDelete_clicked" swapped="no"/>
+                <signal name="clicked" handler="on_btn_delete_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -142,7 +142,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="btnMap">
+              <object class="GtkToolButton" id="btn_map">
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -150,7 +150,7 @@
                 <property name="label" translatable="yes">Weather &amp; Traffic Maps</property>
                 <property name="use_underline">True</property>
                 <property name="icon_widget">image1</property>
-                <signal name="clicked" handler="on_btnMap_clicked" swapped="no"/>
+                <signal name="clicked" handler="on_btn_map_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -158,7 +158,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="btnAbout">
+              <object class="GtkToolButton" id="btn_about">
                 <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -166,7 +166,7 @@
                 <property name="label" translatable="yes">About</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-about</property>
-                <signal name="clicked" handler="on_btnAbout_activate" swapped="no"/>
+                <signal name="clicked" handler="on_btn_about_activate" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -226,7 +226,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinButton" id="spinStream">
+                  <object class="GtkSpinButton" id="spin_stream">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="max_length">1</property>
@@ -236,7 +236,7 @@
                     <property name="adjustment">adjStream</property>
                     <property name="snap_to_ticks">True</property>
                     <property name="numeric">True</property>
-                    <signal name="value-changed" handler="on_spinStream_value_changed" swapped="no"/>
+                    <signal name="value-changed" handler="on_spin_stream_value_changed" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">3</property>
@@ -270,10 +270,10 @@
           </packing>
         </child>
         <child>
-          <object class="GtkNotebook" id="notebookMain">
+          <object class="GtkNotebook" id="notebook_main">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <signal name="switch-page" handler="on_notebookMain_switch_page" swapped="no"/>
+            <signal name="switch-page" handler="on_notebook_main_switch_page" swapped="no"/>
             <child>
               <object class="GtkFrame" id="frameCover">
                 <property name="visible">True</property>
@@ -655,7 +655,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkCheckButton" id="cbAutoGain">
+                          <object class="GtkCheckButton" id="cb_auto_gain">
                             <property name="label" translatable="yes">Auto</property>
                             <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
@@ -664,7 +664,7 @@
                             <property name="tooltip_text" translatable="yes">Automatic Gain</property>
                             <property name="active">True</property>
                             <property name="draw_indicator">True</property>
-                            <signal name="toggled" handler="on_cbAutoGain_toggled" swapped="no"/>
+                            <signal name="toggled" handler="on_cb_auto_gain_toggled" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">2</property>
@@ -811,10 +811,10 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <child>
-                  <object class="GtkTreeView" id="listviewBookmarks">
+                  <object class="GtkTreeView" id="lv_bookmarks">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <signal name="row-activated" handler="on_listviewBookmarks_row_activated" swapped="no"/>
+                    <signal name="row-activated" handler="on_lv_bookmarks_row_activated" swapped="no"/>
                     <child internal-child="selection">
                       <object class="GtkTreeSelection"/>
                     </child>
@@ -868,14 +868,14 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkRadioButton" id="radMapTraffic">
+                          <object class="GtkRadioButton" id="rad_map_traffic">
                             <property name="label" translatable="yes">Traffic Map</property>
                             <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
                             <property name="draw_indicator">True</property>
-                            <signal name="toggled" handler="on_radMap_toggled" swapped="no"/>
+                            <signal name="toggled" handler="on_rad_map_toggled" swapped="no"/>
                           </object>
                           <packing>
                             <property name="top_attach">1</property>
@@ -885,15 +885,15 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkRadioButton" id="radMapWeather">
+                          <object class="GtkRadioButton" id="rad_map_weather">
                             <property name="label" translatable="yes">Weather Radar</property>
                             <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
                             <property name="draw_indicator">True</property>
-                            <property name="group">radMapTraffic</property>
-                            <signal name="toggled" handler="on_radMap_toggled" swapped="no"/>
+                            <property name="group">rad_map_traffic</property>
+                            <signal name="toggled" handler="on_rad_map_toggled" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>

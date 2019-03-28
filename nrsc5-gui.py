@@ -93,7 +93,7 @@ class NRSC5_GUI(object):
         # setup bookmarks listview
         nameRenderer = Gtk.CellRendererText()
         nameRenderer.set_property("editable", True)
-        nameRenderer.connect("edited", self.on_bookmarkNameEdited)
+        nameRenderer.connect("edited", self.on_bookmark_name_edited)
 
         colStation = Gtk.TreeViewColumn("Station", Gtk.CellRendererText(), text=0)
         colName = Gtk.TreeViewColumn("Name", nameRenderer, text=1)
@@ -103,8 +103,8 @@ class NRSC5_GUI(object):
         colName.set_resizable(True)
         colName.set_sort_column_id(1)
 
-        self.lvBookmarks.append_column(colStation)
-        self.lvBookmarks.append_column(colName)
+        self.lv_bookmarks.append_column(colStation)
+        self.lv_bookmarks.append_column(colName)
 
         self.loadSettings()
         self.processWeatherMaps()
@@ -124,13 +124,13 @@ class NRSC5_GUI(object):
             # add entry in database for the station if it doesn't exist
             self.stationLogos[self.stationStr] = ["", "", "", ""]
 
-    def on_btnPlay_clicked(self, _btn):
+    def on_btn_play_clicked(self, _btn):
         # start playback
         if not self.playing:
 
             # update all of the spin buttons to prevent the text from sticking
             self.spinFreq.update()
-            self.spinStream.update()
+            self.spin_stream.update()
             self.spinGain.update()
             self.spinPPM.update()
             self.spinRTL.update()
@@ -144,32 +144,32 @@ class NRSC5_GUI(object):
             self.spinGain.set_sensitive(False)
             self.spinPPM.set_sensitive(False)
             self.spinRTL.set_sensitive(False)
-            self.btnPlay.set_sensitive(False)
-            self.btnStop.set_sensitive(True)
-            self.cbAutoGain.set_sensitive(False)
+            self.btn_play.set_sensitive(False)
+            self.btn_stop.set_sensitive(True)
+            self.cb_auto_gain.set_sensitive(False)
             self.playing = True
             self.lastXHDR = ""
 
             self.play()
 
             self.stationStr = str(self.spinFreq.get_value())
-            self.streamNum = int(self.spinStream.get_value())-1
+            self.streamNum = int(self.spin_stream.get_value())-1
 
             self.display_logo()
 
             # check if station is bookmarked
             self.bookmarked = False
-            freq = int((self.spinFreq.get_value()+0.005)*100) + int(self.spinStream.get_value())
+            freq = int((self.spinFreq.get_value()+0.005)*100) + int(self.spin_stream.get_value())
             for b in self.bookmarks:
                 if b[2] == freq:
                     self.bookmarked = True
                     break
 
-            self.btnBookmark.set_sensitive(not self.bookmarked)
-            if self.notebookMain.get_current_page() != 3:
-                self.btnDelete.set_sensitive(self.bookmarked)
+            self.btn_bookmark.set_sensitive(not self.bookmarked)
+            if self.notebook_main.get_current_page() != 3:
+                self.btn_delete.set_sensitive(self.bookmarked)
 
-    def on_btnStop_clicked(self, _btn):
+    def on_btn_stop_clicked(self, _btn):
         # stop playback
         if self.playing:
             self.playing = False
@@ -185,52 +185,52 @@ class NRSC5_GUI(object):
             self.statusTimer = None
 
             # enable controls
-            if not self.cbAutoGain.get_active():
+            if not self.cb_auto_gain.get_active():
                 self.spinGain.set_sensitive(True)
             self.spinFreq.set_sensitive(True)
             self.spinPPM.set_sensitive(True)
             self.spinRTL.set_sensitive(True)
-            self.btnPlay.set_sensitive(True)
-            self.btnStop.set_sensitive(False)
-            self.btnBookmark.set_sensitive(False)
-            self.cbAutoGain.set_sensitive(True)
+            self.btn_play.set_sensitive(True)
+            self.btn_stop.set_sensitive(False)
+            self.btn_bookmark.set_sensitive(False)
+            self.cb_auto_gain.set_sensitive(True)
 
             # clear stream info
             self.initStreamInfo()
 
-            self.btnBookmark.set_sensitive(False)
-            if self.notebookMain.get_current_page() != 3:
-                self.btnDelete.set_sensitive(False)
+            self.btn_bookmark.set_sensitive(False)
+            if self.notebook_main.get_current_page() != 3:
+                self.btn_delete.set_sensitive(False)
 
-    def on_btnBookmark_clicked(self, _btn):
+    def on_btn_bookmark_clicked(self, _btn):
         # pack frequency and channel number into one int
-        freq = int((self.spinFreq.get_value()+0.005)*100) + int(self.spinStream.get_value())
+        freq = int((self.spinFreq.get_value()+0.005)*100) + int(self.spin_stream.get_value())
 
         # create bookmark
         bookmark = [
-            "{:4.1f}-{:1.0f}".format(self.spinFreq.get_value(), self.spinStream.get_value()),
+            "{:4.1f}-{:1.0f}".format(self.spinFreq.get_value(), self.spin_stream.get_value()),
             self.streamInfo["Callsign"],
             freq
         ]
         self.bookmarked = True                  # mark as bookmarked
         self.bookmarks.append(bookmark)         # store bookmark in array
         self.lsBookmarks.append(bookmark)       # add bookmark to listview
-        self.btnBookmark.set_sensitive(False)   # disable bookmark button
+        self.btn_bookmark.set_sensitive(False)   # disable bookmark button
 
-        if self.notebookMain.get_current_page() != 3:
-            self.btnDelete.set_sensitive(True)  # enable delete button
+        if self.notebook_main.get_current_page() != 3:
+            self.btn_delete.set_sensitive(True)  # enable delete button
 
-    def on_btnDelete_clicked(self, _btn):
+    def on_btn_delete_clicked(self, _btn):
         # select current station if not on bookmarks page
-        if self.notebookMain.get_current_page() != 3:
-            station = int((self.spinFreq.get_value()+0.005)*100) + int(self.spinStream.get_value())
+        if self.notebook_main.get_current_page() != 3:
+            station = int((self.spinFreq.get_value()+0.005)*100) + int(self.spin_stream.get_value())
             for i in range(len(self.lsBookmarks)):
                 if self.lsBookmarks[i][2] == station:
-                    self.lvBookmarks.set_cursor(i)
+                    self.lv_bookmarks.set_cursor(i)
                     break
 
         # get station of selected row
-        model, tree_iter = self.lvBookmarks.get_selection().get_selected()
+        model, tree_iter = self.lv_bookmarks.get_selection().get_selected()
         station = model.get_value(tree_iter, 2)
 
         # remove row
@@ -242,11 +242,11 @@ class NRSC5_GUI(object):
                 self.bookmarks.pop(i)
                 break
 
-        if self.notebookMain.get_current_page() != 3 and self.playing:
-            self.btnBookmark.set_sensitive(True)
+        if self.notebook_main.get_current_page() != 3 and self.playing:
+            self.btn_bookmark.set_sensitive(True)
             self.bookmarked = False
 
-    def on_btnAbout_activate(self, _btn):
+    def on_btn_about_activate(self, _btn):
         # sets up and displays about dialog
         if self.about_dialog:
             self.about_dialog.present()
@@ -301,7 +301,7 @@ class NRSC5_GUI(object):
         self.about_dialog = about_dialog
         about_dialog.show()
 
-    def on_spinStream_value_changed(self, _spin):
+    def on_spin_stream_value_changed(self, _spin):
         self.lastXHDR = ""
         self.streamInfo["Title"] = ""
         self.streamInfo["Album"] = ""
@@ -309,15 +309,15 @@ class NRSC5_GUI(object):
         self.streamInfo["Cover"] = ""
         self.streamInfo["Logo"] = ""
         self.streamInfo["Bitrate"] = 0
-        self.streamNum = int(self.spinStream.get_value())-1
+        self.streamNum = int(self.spin_stream.get_value())-1
         if self.playing:
             self.display_logo()
 
-    def on_cbAutoGain_toggled(self, btn):
+    def on_cb_auto_gain_toggled(self, btn):
         self.spinGain.set_sensitive(not btn.get_active())
         self.lblGain.set_visible(btn.get_active())
 
-    def on_listviewBookmarks_row_activated(self, treeview, path, _view_column):
+    def on_lv_bookmarks_row_activated(self, treeview, path, _view_column):
         if path:
             # get station from bookmark row
             tree_iter = treeview.get_model().get_iter(path[0])
@@ -325,21 +325,21 @@ class NRSC5_GUI(object):
 
             # set frequency and stream
             self.spinFreq.set_value(float(int(station/10)/10.0))
-            self.spinStream.set_value(station % 10)
+            self.spin_stream.set_value(station % 10)
 
             # stop playback if playing
             if self.playing:
-                self.on_btnStop_clicked(None)
+                self.on_btn_stop_clicked(None)
 
             # play bookmarked station
-            self.on_btnPlay_clicked(None)
+            self.on_btn_play_clicked(None)
 
-    def on_lvBookmarks_selection_changed(self, _tree_selection):
+    def on_lv_bookmarks_selection_changed(self, _tree_selection):
         # enable delete button if bookmark is selected
-        _, pathlist = self.lvBookmarks.get_selection().get_selected_rows()
-        self.btnDelete.set_sensitive(len(pathlist) != 0)
+        _, pathlist = self.lv_bookmarks.get_selection().get_selected_rows()
+        self.btn_delete.set_sensitive(len(pathlist) != 0)
 
-    def on_bookmarkNameEdited(self, _cell, path, text, _data=None):
+    def on_bookmark_name_edited(self, _cell, path, text, _data=None):
         # update name in listview
         tree_iter = self.lsBookmarks.get_iter(path)
         self.lsBookmarks.set(tree_iter, 1, text)
@@ -350,21 +350,21 @@ class NRSC5_GUI(object):
                 b[1] = text
                 break
 
-    def on_notebookMain_switch_page(self, _notebook, _page, page_num):
+    def on_notebook_main_switch_page(self, _notebook, _page, page_num):
         # disable delete button if not on bookmarks page and station is not bookmarked
         if page_num != 3 and (not self.bookmarked or not self.playing):
-            self.btnDelete.set_sensitive(False)
+            self.btn_delete.set_sensitive(False)
         # enable delete button if not on bookmarks page and station is bookmarked
         elif page_num != 3 and self.bookmarked:
-            self.btnDelete.set_sensitive(True)
+            self.btn_delete.set_sensitive(True)
         # enable delete button if on bookmarks page and a bookmark is selected
         else:
-            _, tree_iter = self.lvBookmarks.get_selection().get_selected()
-            self.btnDelete.set_sensitive(tree_iter is not None)
+            _, tree_iter = self.lv_bookmarks.get_selection().get_selected()
+            self.btn_delete.set_sensitive(tree_iter is not None)
 
-    def on_radMap_toggled(self, btn):
+    def on_rad_map_toggled(self, btn):
         if btn.get_active():
-            if btn == self.radMapTraffic:
+            if btn == self.rad_map_traffic:
                 self.mapData["mapMode"] = 0
                 mapFile = os.path.join("map", "TrafficMap.png")
                 if os.path.isfile(mapFile):                                                             # check if map exists
@@ -373,7 +373,7 @@ class NRSC5_GUI(object):
                 else:
                     self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)     # display missing image if file is not found
 
-            elif btn == self.radMapWeather:
+            elif btn == self.rad_map_weather:
                 self.mapData["mapMode"] = 1
                 if os.path.isfile(self.mapData["weatherNow"]):
                     mapImg = Image.open(self.mapData["weatherNow"]).resize((200, 200), Image.LANCZOS)   # scale map to fit window
@@ -381,11 +381,11 @@ class NRSC5_GUI(object):
                 else:
                     self.imgMap.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)     # display missing image if file is not found
 
-    def on_btnMap_clicked(self, _btn):
+    def on_btn_map_clicked(self, _btn):
         # open map viewer window
         if self.mapViewer is None:
             self.mapViewer = NRSC5_Map(self, self.mapViewerCallback, self.mapData)
-            self.mapViewer.mapWindow.show()
+            self.mapViewer.map_window.show()
 
     def mapViewerCallback(self):
         # delete the map viewer
@@ -394,10 +394,10 @@ class NRSC5_GUI(object):
     def play(self):
         self.radio = nrsc5.NRSC5(lambda type, evt: self.callback(type, evt))
         self.radio.open(int(self.spinRTL.get_value()), int(self.spinPPM.get_value()))
-        self.radio.set_auto_gain(self.cbAutoGain.get_active())
+        self.radio.set_auto_gain(self.cb_auto_gain.get_active())
 
         # set gain if auto gain is not selected
-        if not self.cbAutoGain.get_active():
+        if not self.cb_auto_gain.get_active():
             self.streamInfo["Gain"] = self.spinGain.get_value()
             self.radio.set_gain(self.streamInfo["Gain"])
 
@@ -429,7 +429,7 @@ class NRSC5_GUI(object):
                 self.lblBerMin.set_label("{:1.3f}% (Min)".format(ber[2]))
                 self.lblBerMax.set_label("{:1.3f}% (Max)".format(ber[3]))
 
-                if self.cbAutoGain.get_active():
+                if self.cb_auto_gain.get_active():
                     self.spinGain.set_value(self.streamInfo["Gain"])
                     self.lblGain.set_label("{:2.1f}dB".format(self.streamInfo["Gain"]))
 
@@ -485,7 +485,7 @@ class NRSC5_GUI(object):
                 self.trafficMap.save(os.path.join("map", "TrafficMap.png"))                             # save traffic map
 
                 # display on map page
-                if self.radMapTraffic.get_active():
+                if self.rad_map_traffic.get_active():
                     imgMap = self.trafficMap.resize((200, 200), Image.LANCZOS)                          # scale map to fit window
                     self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
 
@@ -532,7 +532,7 @@ class NRSC5_GUI(object):
                 self.mapData["weatherNow"] = wxMapPath
 
                 # display on map page
-                if self.radMapWeather.get_active():
+                if self.rad_map_weather.get_active():
                     imgMap = imgMap.resize((200, 200), Image.LANCZOS)                                   # scale map to fit window
                     self.imgMap.set_from_pixbuf(imgToPixbuf(imgMap))                                    # convert image to pixbuf and display
 
@@ -793,21 +793,21 @@ class NRSC5_GUI(object):
         self.about_dialog = None
 
         # get controls
-        self.notebookMain = builder.get_object("notebookMain")
+        self.notebook_main = builder.get_object("notebook_main")
         self.imgCover = builder.get_object("imgCover")
         self.imgMap = builder.get_object("imgMap")
         self.spinFreq = builder.get_object("spinFreq")
-        self.spinStream = builder.get_object("spinStream")
+        self.spin_stream = builder.get_object("spin_stream")
         self.spinGain = builder.get_object("spinGain")
         self.spinPPM = builder.get_object("spinPPM")
         self.spinRTL = builder.get_object("spinRTL")
-        self.cbAutoGain = builder.get_object("cbAutoGain")
-        self.btnPlay = builder.get_object("btnPlay")
-        self.btnStop = builder.get_object("btnStop")
-        self.btnBookmark = builder.get_object("btnBookmark")
-        self.btnDelete = builder.get_object("btnDelete")
-        self.radMapTraffic = builder.get_object("radMapTraffic")
-        self.radMapWeather = builder.get_object("radMapWeather")
+        self.cb_auto_gain = builder.get_object("cb_auto_gain")
+        self.btn_play = builder.get_object("btn_play")
+        self.btn_stop = builder.get_object("btn_stop")
+        self.btn_bookmark = builder.get_object("btn_bookmark")
+        self.btn_delete = builder.get_object("btn_delete")
+        self.rad_map_traffic = builder.get_object("rad_map_traffic")
+        self.rad_map_weather = builder.get_object("rad_map_weather")
         self.txtTitle = builder.get_object("txtTitle")
         self.txtArtist = builder.get_object("txtArtist")
         self.txtAlbum = builder.get_object("txtAlbum")
@@ -824,11 +824,11 @@ class NRSC5_GUI(object):
         self.lblBerAvg = builder.get_object("lblBerAvg")
         self.lblBerMin = builder.get_object("lblBerMin")
         self.lblBerMax = builder.get_object("lblBerMax")
-        self.lvBookmarks = builder.get_object("listviewBookmarks")
+        self.lv_bookmarks = builder.get_object("lv_bookmarks")
         self.lsBookmarks = Gtk.ListStore(str, str, int)
 
-        self.lvBookmarks.set_model(self.lsBookmarks)
-        self.lvBookmarks.get_selection().connect("changed", self.on_lvBookmarks_selection_changed)
+        self.lv_bookmarks.set_model(self.lsBookmarks)
+        self.lv_bookmarks.get_selection().connect("changed", self.on_lv_bookmarks_selection_changed)
 
     def initStreamInfo(self):
         # stream information
@@ -887,20 +887,20 @@ class NRSC5_GUI(object):
                 if "MapData" in config:
                     self.mapData = config["MapData"]
                     if self.mapData["mapMode"] == 0:
-                        self.radMapTraffic.set_active(True)
-                        self.radMapTraffic.toggled()
+                        self.rad_map_traffic.set_active(True)
+                        self.rad_map_traffic.toggled()
                     elif self.mapData["mapMode"] == 1:
-                        self.radMapWeather.set_active(True)
-                        self.radMapWeather.toggled()
+                        self.rad_map_weather.set_active(True)
+                        self.rad_map_weather.toggled()
 
                 if "Width" and "Height" in config:
                     self.mainWindow.resize(config["Width"], config["Height"])
 
                 self.mainWindow.move(config["WindowX"], config["WindowY"])
                 self.spinFreq.set_value(config["Frequency"])
-                self.spinStream.set_value(config["Stream"])
+                self.spin_stream.set_value(config["Stream"])
                 self.spinGain.set_value(config["Gain"])
-                self.cbAutoGain.set_active(config["AutoGain"])
+                self.cb_auto_gain.set_active(config["AutoGain"])
                 self.spinPPM.set_value(config["PPMError"])
                 self.spinRTL.set_value(config["RTL"])
                 self.bookmarks = config["Bookmarks"]
@@ -966,9 +966,9 @@ class NRSC5_GUI(object):
                     "Width": width,
                     "Height": height,
                     "Frequency": self.spinFreq.get_value(),
-                    "Stream": int(self.spinStream.get_value()),
+                    "Stream": int(self.spin_stream.get_value()),
                     "Gain": self.spinGain.get_value(),
-                    "AutoGain": self.cbAutoGain.get_active(),
+                    "AutoGain": self.cb_auto_gain.get_active(),
                     "PPMError": int(self.spinPPM.get_value()),
                     "RTL": int(self.spinRTL.get_value()),
                     "Bookmarks": self.bookmarks,
@@ -1002,34 +1002,34 @@ class NRSC5_Map(object):
         self.mapIndex = 0                                                           # the index of the next weather map to display
 
         # get the controls
-        self.mapWindow = builder.get_object("mapWindow")
+        self.map_window = builder.get_object("map_window")
         self.imgMap = builder.get_object("imgMap")
-        self.radMapWeather = builder.get_object("radMapWeather")
-        self.radMapTraffic = builder.get_object("radMapTraffic")
-        self.chkAnimate = builder.get_object("chkAnimate")
-        self.chkScale = builder.get_object("chkScale")
-        self.spnSpeed = builder.get_object("spnSpeed")
+        self.rad_map_weather = builder.get_object("rad_map_weather")
+        self.rad_map_traffic = builder.get_object("rad_map_traffic")
+        self.chk_animate = builder.get_object("chk_animate")
+        self.chk_scale = builder.get_object("chk_scale")
+        self.spin_speed = builder.get_object("spin_speed")
         self.adjSpeed = builder.get_object("adjSpeed")
         self.imgKey = builder.get_object("imgKey")
 
-        self.mapWindow.connect("delete-event", self.on_mapWindow_delete)
+        self.map_window.connect("delete-event", self.on_map_window_delete)
 
         self.config = data["viewerConfig"]                                          # get the map viewer config
-        self.mapWindow.resize(*self.config["windowSize"])                           # set the window size
-        self.mapWindow.move(*self.config["windowPos"])                              # set the window position
+        self.map_window.resize(*self.config["windowSize"])                          # set the window size
+        self.map_window.move(*self.config["windowPos"])                             # set the window position
         if self.config["mode"] == 0:
-            self.radMapTraffic.set_active(True)                                     # set the map radio buttons
+            self.rad_map_traffic.set_active(True)                                   # set the map radio buttons
         elif self.config["mode"] == 1:
-            self.radMapWeather.set_active(True)
+            self.rad_map_weather.set_active(True)
         self.setMap(self.config["mode"])                                            # display the current map
 
-        self.chkAnimate.set_active(self.config["animate"])                          # set the animation mode
-        self.chkScale.set_active(self.config["scale"])                              # set the scale mode
-        self.spnSpeed.set_value(self.config["animationSpeed"])                      # set the animation speed
+        self.chk_animate.set_active(self.config["animate"])                         # set the animation mode
+        self.chk_scale.set_active(self.config["scale"])                             # set the scale mode
+        self.spin_speed.set_value(self.config["animationSpeed"])                    # set the animation speed
 
-    def on_radMap_toggled(self, btn):
+    def on_rad_map_toggled(self, btn):
         if btn.get_active():
-            if btn == self.radMapTraffic:
+            if btn == self.rad_map_traffic:
                 self.config["mode"] = 0
                 self.imgKey.set_visible(False)                                                          # hide the key for the weather radar
 
@@ -1040,7 +1040,7 @@ class NRSC5_Map(object):
 
                 self.setMap(0)                                                                          # show the traffic map
 
-            elif btn == self.radMapWeather:
+            elif btn == self.rad_map_weather:
                 self.config["mode"] = 1
                 self.imgKey.set_visible(True)                                                           # show the key for the weather radar
 
@@ -1053,8 +1053,8 @@ class NRSC5_Map(object):
                 elif not self.config["animate"]:
                     self.setMap(1)
 
-    def on_chkAnimate_toggled(self, _btn):
-        self.config["animate"] = self.chkAnimate.get_active()
+    def on_chk_animate_toggled(self, _btn):
+        self.config["animate"] = self.chk_animate.get_active()
 
         if self.config["animate"] and self.config["mode"] == 1:
             # start animation
@@ -1068,7 +1068,7 @@ class NRSC5_Map(object):
             self.mapIndex = len(self.weatherMaps)-1                                                     # reset the animation index
             self.setMap(self.config["mode"])                                                            # show the most recent map
 
-    def on_chkScale_toggled(self, btn):
+    def on_chk_scale_toggled(self, btn):
         self.config["scale"] = btn.get_active()
         if self.config["mode"] == 1:
             if self.config["animate"]:
@@ -1077,10 +1077,10 @@ class NRSC5_Map(object):
             else:
                 self.showImage(self.data["weatherNow"], self.config["scale"])                           # show the most recent map
 
-    def on_spnSpeed_value_changed(self, _spn):
+    def on_spin_speed_value_changed(self, _spn):
         self.config["animationSpeed"] = self.adjSpeed.get_value()                                       # get the animation speed
 
-    def on_mapWindow_delete(self, *_args):
+    def on_map_window_delete(self, *_args):
         # cancel the timer if it's running
         if self.animateTimer is not None:
             self.animateTimer.cancel()
@@ -1093,8 +1093,8 @@ class NRSC5_Map(object):
                 self.animateTimer.cancel()
             time.sleep(0.25)
 
-        self.config["windowPos"] = self.mapWindow.get_position()                                        # store current window position
-        self.config["windowSize"] = self.mapWindow.get_size()                                           # store current window size
+        self.config["windowPos"] = self.map_window.get_position()                                       # store current window position
+        self.config["windowSize"] = self.map_window.get_size()                                          # store current window size
         self.callback()                                                                                 # run the callback
 
     def animate(self):
@@ -1122,7 +1122,7 @@ class NRSC5_Map(object):
 
             self.animateBusy = False                                                                    # set busy to false
         else:
-            self.chkAnimate.set_active(False)                                                           # stop animation if image was not found
+            self.chk_animate.set_active(False)                                                          # stop animation if image was not found
             self.mapIndex = 0
 
     def showImage(self, fileName, scale):
