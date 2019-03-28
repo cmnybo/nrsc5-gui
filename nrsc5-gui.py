@@ -784,7 +784,7 @@ class NRSC5GUI(object):
     def get_controls(self):
         # setup gui
         builder = Gtk.Builder()
-        builder.add_from_file("mainForm.glade")
+        builder.add_from_file("main_form.glade")
         builder.connect_signals(self)
 
         # Windows
@@ -987,7 +987,7 @@ class NRSC5Map(object):
     def __init__(self, parent, callback, data):
         # setup gui
         builder = Gtk.Builder()
-        builder.add_from_file("mapForm.glade")
+        builder.add_from_file("map_form.glade")
         builder.connect_signals(self)
 
         self.parent = parent
