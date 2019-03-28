@@ -39,6 +39,7 @@ from gi.repository import Gtk, GObject, Gdk, GdkPixbuf
 
 import nrsc5
 
+
 class NRSC5_GUI(object):
     AUDIO_SAMPLE_RATE = 44100
     AUDIO_SAMPLES_PER_FRAME = 2048
@@ -411,7 +412,7 @@ class NRSC5_GUI(object):
             try:
                 imagePath = ""
                 image = ""
-                ber = [self.stream_info["BER"][0]*100, self.stream_info["BER"][1]*100, self.stream_info["BER"][2]*100, self.stream_info["BER"][3]*100]
+                ber = [self.stream_info["BER"][i]*100 for i in range(4)]
                 self.txt_title.set_text(self.stream_info["Title"])
                 self.txt_artist.set_text(self.stream_info["Artist"])
                 self.txt_album.set_text(self.stream_info["Album"])
@@ -467,7 +468,8 @@ class NRSC5_GUI(object):
             y = int(m.group(2))-1
 
             # get time from map tile and convert to local time
-            dt = datetime.datetime(int(m.group(3)), int(m.group(4)), int(m.group(5)), int(m.group(6)), int(m.group(7)), tzinfo=tz.tzutc())
+            dt = datetime.datetime(int(m.group(3)), int(m.group(4)), int(m.group(5)),
+                                   int(m.group(6)), int(m.group(7)), tzinfo=tz.tzutc())
             ts = dtToTs(dt)
 
             # check if the tile has already been loaded
@@ -498,7 +500,8 @@ class NRSC5_GUI(object):
 
         if m:
             # get time from map tile and convert to local time
-            dt = datetime.datetime(int(m.group(2)), int(m.group(3)), int(m.group(4)), int(m.group(5)), int(m.group(6)), tzinfo=tz.tzutc())
+            dt = datetime.datetime(int(m.group(2)), int(m.group(3)), int(m.group(4)),
+                                   int(m.group(5)), int(m.group(6)), tzinfo=tz.tzutc())
             t = dt.astimezone(tz.tzlocal())
             ts = dtToTs(dt)
             map_id = self.map_data["weatherID"]
