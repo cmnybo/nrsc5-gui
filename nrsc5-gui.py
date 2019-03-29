@@ -1149,19 +1149,18 @@ class NRSC5Map(object):
 
 
 def dt_to_ts(dt):
-    # convert datetime to timestamp
+    """convert datetime to timestamp"""
     return int((dt - datetime.datetime(1970, 1, 1, tzinfo=tz.tzutc())).total_seconds())
 
 
 def img_to_pixbuf(img):
-    # convert PIL.Image to gdk.pixbuf
+    """convert PIL.Image to gdk.pixbuf"""
     with tempfile.NamedTemporaryFile("wb", suffix=".png") as file:
         img.save(file)
         return GdkPixbuf.Pixbuf.new_from_file(file.name)
 
 
 if __name__ == "__main__":
-    # show main window and start main thread
     os.chdir(sys.path[0])
     nrsc5_gui = NRSC5GUI()
     nrsc5_gui.main_window.show()
