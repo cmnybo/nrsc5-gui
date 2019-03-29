@@ -126,7 +126,7 @@ class NRSC5GUI(object):
             self.station_logos[self.station_str] = ["", "", "", ""]
 
     def on_btn_play_clicked(self, _btn):
-        # start playback
+        """start playback"""
         if not self.playing:
 
             # update all of the spin buttons to prevent the text from sticking
@@ -171,7 +171,7 @@ class NRSC5GUI(object):
                 self.btn_delete.set_sensitive(self.bookmarked)
 
     def on_btn_stop_clicked(self, _btn):
-        # stop playback
+        """stop playback"""
         if self.playing:
             self.playing = False
 
@@ -248,7 +248,7 @@ class NRSC5GUI(object):
             self.bookmarked = False
 
     def on_btn_about_activate(self, _btn):
-        # sets up and displays about dialog
+        """sets up and displays about dialog"""
         if self.about_dialog:
             self.about_dialog.present()
             return
@@ -383,13 +383,13 @@ class NRSC5GUI(object):
                     self.img_map.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)
 
     def on_btn_map_clicked(self, _btn):
-        # open map viewer window
+        """open map viewer window"""
         if self.map_viewer is None:
             self.map_viewer = NRSC5Map(self, self.map_viewer_callback, self.map_data)
             self.map_viewer.map_window.show()
 
     def map_viewer_callback(self):
-        # delete the map viewer
+        """delete the map viewer"""
         self.map_viewer = None
 
     def play(self):
@@ -406,7 +406,7 @@ class NRSC5GUI(object):
         self.radio.start()
 
     def check_status(self):
-        # update status information
+        """update status information"""
         def update():
             Gdk.threads_enter()
             try:
@@ -603,10 +603,11 @@ class NRSC5GUI(object):
         logging.debug("Found %s weather maps", number_of_maps)
 
     def get_map_area(self, lat1, lon1, lat2, lon2):
+        """get pixel coordinates from latitude and longitude
+        calculations taken from https://github.com/KYDronePilot/hdfm"""
+
         from math import asinh, tan, radians
 
-        # get pixel coordinates from latitude and longitude
-        # calculations taken from https://github.com/KYDronePilot/hdfm
         top = asinh(tan(radians(52.482780)))
         lat1 = top - asinh(tan(radians(lat1)))
         lat2 = top - asinh(tan(radians(lat2)))
@@ -632,7 +633,7 @@ class NRSC5GUI(object):
             map_img.save(map_path)
 
     def check_tiles(self, timestamp):
-        # check if all the tiles have been received
+        """check if all the tiles have been received"""
         for i in range(3):
             for j in range(3):
                 if self.map_tiles[i][j] != timestamp:
@@ -640,7 +641,7 @@ class NRSC5GUI(object):
         return True
 
     def make_timestamp(self, time, size, pos):
-        # create a timestamp image to overlay on the weathermap
+        """create a timestamp image to overlay on the weathermap"""
         pos_x, pos_y = pos
         text = "{:04g}-{:02g}-{:02g} {:02g}:{:02g}".format(time.year, time.month, time.day, time.hour, time.minute)
         img_ts = Image.new("RGBA", size, (0, 0, 0, 0))
