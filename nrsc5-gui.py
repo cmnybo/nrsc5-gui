@@ -335,7 +335,7 @@ class NRSC5GUI(object):
             # play bookmarked station
             self.on_btn_play_clicked(None)
 
-    def on_lv_bookmarks_selection_changed(self, _tree_selection):
+    def on_lv_bookmarks_sel_changed(self, _tree_selection):
         # enable delete button if bookmark is selected
         _, pathlist = self.lv_bookmarks.get_selection().get_selected_rows()
         self.btn_delete.set_sensitive(len(pathlist) != 0)
@@ -470,19 +470,19 @@ class NRSC5GUI(object):
             # get time from map tile and convert to local time
             dt = datetime.datetime(int(match.group(3)), int(match.group(4)), int(match.group(5)),
                                    int(match.group(6)), int(match.group(7)), tzinfo=tz.tzutc())
-            ts = dt_to_ts(dt)
+            timestamp = dt_to_ts(dt)
 
             # check if the tile has already been loaded
-            if self.map_tiles[tile_x][tile_y] == ts:
+            if self.map_tiles[tile_x][tile_y] == timestamp:
                 return  # no need to recreate the map if it hasn't changed
 
             logging.debug("Got traffic map tile: %s, %s", tile_x, tile_y)
 
-            self.map_tiles[tile_x][tile_y] = ts
+            self.map_tiles[tile_x][tile_y] = timestamp
             self.traffic_map.paste(Image.open(io.BytesIO(data)), (tile_y*200, tile_x*200))
 
             # check if all of the tiles are loaded
-            if self.check_tiles(ts):
+            if self.check_tiles(timestamp):
                 logging.debug("Got complete traffic map")
                 self.traffic_map.save(os.path.join("map", "TrafficMap.png"))
 
@@ -502,21 +502,21 @@ class NRSC5GUI(object):
             # get time from map tile and convert to local time
             dt = datetime.datetime(int(match.group(2)), int(match.group(3)), int(match.group(4)),
                                    int(match.group(5)), int(match.group(6)), tzinfo=tz.tzutc())
-            t = dt.astimezone(tz.tzlocal())
-            ts = dt_to_ts(dt)
+            local_time = dt.astimezone(tz.tzlocal())
+            timestamp = dt_to_ts(dt)
             map_id = self.map_data["weather_id"]
 
             if match.group(1) != map_id:
                 logging.error("Received weather overlay with the wrong ID: %s", match.group(1))
                 return
 
-            if self.map_data["weather_time"] == ts:
+            if self.map_data["weather_time"] == timestamp:
                 return  # no need to recreate the map if it hasn't changed
 
             logging.debug("Got weather overlay")
 
-            self.map_data["weather_time"] = ts
-            weather_map_path = os.path.join("map", "WeatherMap_{}_{}.png".format(map_id, ts))
+            self.map_data["weather_time"] = timestamp
+            weather_map_path = os.path.join("map", "WeatherMap_{}_{}.png".format(map_id, timestamp))
 
             # create weather map
             try:
@@ -526,7 +526,7 @@ class NRSC5GUI(object):
 
                 img_map = Image.open(map_path).convert("RGBA")
                 timestamp_position = (img_map.size[0]-235, img_map.size[1]-29)
-                img_ts = self.make_timestamp(t, img_map.size, timestamp_position)
+                img_ts = self.make_timestamp(local_time, img_map.size, timestamp_position)
                 img_radar = Image.open(io.BytesIO(data)).convert("RGBA")
                 img_radar = img_radar.resize(img_map.size, Image.LANCZOS)
                 img_map = Image.alpha_composite(img_map, img_radar)
@@ -582,10 +582,10 @@ class NRSC5GUI(object):
             match = regex.match(file)
             if match:
                 map_id = match.group(1)
-                ts = int(match.group(2))
+                timestamp = int(match.group(2))
 
                 # remove weather maps older than 12 hours
-                if now - ts > 60*60*12:
+                if now - timestamp > 60*60*12:
                     try:
                         if file in self.weather_maps:
                             self.weather_maps.pop(self.weather_maps.index(file))
@@ -610,20 +610,20 @@ class NRSC5GUI(object):
         top = asinh(tan(radians(52.482780)))
         lat1 = top - asinh(tan(radians(lat1)))
         lat2 = top - asinh(tan(radians(lat2)))
-        x1 = (lon1 + 130.781250) * 7162 / 39.34135
-        x2 = (lon2 + 130.781250) * 7162 / 39.34135
-        y1 = lat1 * 3565 / (top - asinh(tan(radians(38.898))))
-        y2 = lat2 * 3565 / (top - asinh(tan(radians(38.898))))
+        x_1 = (lon1 + 130.781250) * 7162 / 39.34135
+        x_2 = (lon2 + 130.781250) * 7162 / 39.34135
+        y_1 = lat1 * 3565 / (top - asinh(tan(radians(38.898))))
+        y_2 = lat2 * 3565 / (top - asinh(tan(radians(38.898))))
 
-        return (int(round(x1)), int(round(y1)), int(round(x2)), int(round(y2)))
+        return (int(round(x_1)), int(round(y_1)), int(round(x_2)), int(round(y_2)))
 
     def make_base_map(self, map_id, pos):
         map_path = os.path.join("map", "BaseMap_" + map_id + ".png")
         if os.path.isfile(self.MAP_FILE):
             if not os.path.isfile(map_path):
                 logging.debug("Creating new map: %s", map_path)
-                px = self.get_map_area(*pos)
-                map_img = Image.open(self.MAP_FILE).crop(px)
+                map_area = self.get_map_area(*pos)
+                map_img = Image.open(self.MAP_FILE).crop(map_area)
                 map_img.save(map_path)
                 logging.debug("Finished creating map")
         else:
@@ -631,18 +631,18 @@ class NRSC5GUI(object):
             map_img = Image.new("RGBA", (pos[2]-pos[1], pos[3]-pos[1]), "white")
             map_img.save(map_path)
 
-    def check_tiles(self, t):
+    def check_tiles(self, timestamp):
         # check if all the tiles have been received
         for i in range(3):
             for j in range(3):
-                if self.map_tiles[i][j] != t:
+                if self.map_tiles[i][j] != timestamp:
                     return False
         return True
 
-    def make_timestamp(self, t, size, pos):
+    def make_timestamp(self, time, size, pos):
         # create a timestamp image to overlay on the weathermap
         pos_x, pos_y = pos
-        text = "{:04g}-{:02g}-{:02g} {:02g}:{:02g}".format(t.year, t.month, t.day, t.hour, t.minute)
+        text = "{:04g}-{:02g}-{:02g} {:02g}:{:02g}".format(time.year, time.month, time.day, time.hour, time.minute)
         img_ts = Image.new("RGBA", size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(img_ts)
         font = ImageFont.truetype("DejaVuSansMono.ttf", 24)
@@ -829,7 +829,7 @@ class NRSC5GUI(object):
         self.ls_bookmarks = Gtk.ListStore(str, str, int)
 
         self.lv_bookmarks.set_model(self.ls_bookmarks)
-        self.lv_bookmarks.get_selection().connect("changed", self.on_lv_bookmarks_selection_changed)
+        self.lv_bookmarks.get_selection().connect("changed", self.on_lv_bookmarks_sel_changed)
 
     def init_stream_info(self):
         self.stream_info = {
