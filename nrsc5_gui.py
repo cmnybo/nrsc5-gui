@@ -597,7 +597,8 @@ class NRSC5GUI(object):
 
         logging.debug("Found %s weather maps", number_of_maps)
 
-    def map_image_coordinates(self, lat_degrees, lon_degrees):
+    @staticmethod
+    def map_image_coordinates(lat_degrees, lon_degrees):
         """convert latitude & longitude to x & y cooordinates in the map"""
         first_tile_x, first_tile_y = 35, 84
         zoom_level = 8
@@ -633,7 +634,8 @@ class NRSC5GUI(object):
                     return False
         return True
 
-    def make_timestamp(self, local_time, size, pos):
+    @staticmethod
+    def make_timestamp(local_time, size, pos):
         """create a timestamp image to overlay on the weathermap"""
         pos_x, pos_y = pos
         text = datetime.strftime(local_time, "%Y-%m-%d %H:%M")
