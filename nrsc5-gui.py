@@ -17,7 +17,6 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import datetime
 import glob
 import io
 import json
@@ -29,7 +28,7 @@ import sys
 import tempfile
 import threading
 import time
-from dateutil import tz
+from datetime import datetime, timezone
 from PIL import Image, ImageFont, ImageDraw
 import pyaudio
 
@@ -460,17 +459,14 @@ class NRSC5GUI(object):
             self.status_timer.start()
 
     def process_traffic_map(self, filename, data):
-        regex = re.compile(r"^TMT_.*_([1-3])_([1-3])_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2}).*$")
+        regex = re.compile(r"^TMT_.*_([1-3])_([1-3])_(\d{8}_\d{4}).*$")
         match = regex.match(filename)
 
         if match:
             tile_x = int(match.group(1))-1
             tile_y = int(match.group(2))-1
-
-            # get time from map tile and convert to local time
-            dt = datetime.datetime(int(match.group(3)), int(match.group(4)), int(match.group(5)),
-                                   int(match.group(6)), int(match.group(7)), tzinfo=tz.tzutc())
-            timestamp = dt_to_ts(dt)
+            utc_time = datetime.strptime(match.group(3), "%Y%m%d_%H%M").replace(tzinfo=timezone.utc)
+            timestamp = int(utc_time.timestamp())
 
             # check if the tile has already been loaded
             if self.map_tiles[tile_x][tile_y] == timestamp:
@@ -495,15 +491,12 @@ class NRSC5GUI(object):
                     self.map_viewer.updated()
 
     def process_weather_overlay(self, filename, data):
-        regex = re.compile(r"^DWRO_(.*)_.*_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2}).*$")
+        regex = re.compile(r"^DWRO_(.*)_.*_(\d{8}_\d{4}).*$")
         match = regex.match(filename)
 
         if match:
-            # get time from map tile and convert to local time
-            dt = datetime.datetime(int(match.group(2)), int(match.group(3)), int(match.group(4)),
-                                   int(match.group(5)), int(match.group(6)), tzinfo=tz.tzutc())
-            local_time = dt.astimezone(tz.tzlocal())
-            timestamp = dt_to_ts(dt)
+            utc_time = datetime.strptime(match.group(2), "%Y%m%d_%H%M").replace(tzinfo=timezone.utc)
+            timestamp = int(utc_time.timestamp())
             map_id = self.map_data["weather_id"]
 
             if match.group(1) != map_id:
@@ -526,7 +519,7 @@ class NRSC5GUI(object):
 
                 img_map = Image.open(map_path).convert("RGBA")
                 timestamp_position = (img_map.size[0]-235, img_map.size[1]-29)
-                img_ts = self.make_timestamp(local_time, img_map.size, timestamp_position)
+                img_ts = self.make_timestamp(utc_time, img_map.size, timestamp_position)
                 img_radar = Image.open(io.BytesIO(data)).convert("RGBA")
                 img_radar = img_radar.resize(img_map.size, Image.LANCZOS)
                 img_map = Image.alpha_composite(img_map, img_radar)
@@ -575,7 +568,7 @@ class NRSC5GUI(object):
     def process_weather_maps(self):
         number_of_maps = 0
         regex = re.compile("^map.WeatherMap_([a-zA-Z0-9]+)_([0-9]+).png")
-        now = dt_to_ts(datetime.datetime.now(tz.tzutc()))
+        now = time.time()
         files = glob.glob(os.path.join("map", "WeatherMap_") + "*.png")
         files.sort()
         for file in files:
@@ -640,10 +633,10 @@ class NRSC5GUI(object):
                     return False
         return True
 
-    def make_timestamp(self, time, size, pos):
+    def make_timestamp(self, utc_time, size, pos):
         """create a timestamp image to overlay on the weathermap"""
         pos_x, pos_y = pos
-        text = "{:04g}-{:02g}-{:02g} {:02g}:{:02g}".format(time.year, time.month, time.day, time.hour, time.minute)
+        text = datetime.strftime(utc_time.astimezone(), "%Y-%m-%d %H:%M")
         img_ts = Image.new("RGBA", size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(img_ts)
         font = ImageFont.truetype("DejaVuSansMono.ttf", 24)
@@ -1147,11 +1140,6 @@ class NRSC5Map(object):
         elif self.config["mode"] == 1:
             self.set_map(1)
             self.map_index = len(self.weather_maps)-1
-
-
-def dt_to_ts(dt):
-    """convert datetime to timestamp"""
-    return int((dt - datetime.datetime(1970, 1, 1, tzinfo=tz.tzutc())).total_seconds())
 
 
 def img_to_pixbuf(img):
