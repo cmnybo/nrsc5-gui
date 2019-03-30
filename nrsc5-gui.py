@@ -43,6 +43,7 @@ class NRSC5GUI(object):
     AUDIO_SAMPLE_RATE = 44100
     AUDIO_SAMPLES_PER_FRAME = 2048
     MAP_FILE = "map.png"
+    VERSION = "2.0.0"
 
     logLevel = 20  # decrease to 10 to enable debug logs
 
@@ -278,7 +279,7 @@ class NRSC5GUI(object):
         about_dialog.set_transient_for(self.main_window)
         about_dialog.set_destroy_with_parent(True)
         about_dialog.set_name("NRSC5 GUI")
-        about_dialog.set_version("1.1.2")
+        about_dialog.set_version(self.VERSION)
         about_dialog.set_copyright("Copyright \u00A9 2017-2019 Cody Nybo & Clayton Smith")
         about_dialog.set_website("https://github.com/cmnybo/nrsc5-gui")
         about_dialog.set_comments("A graphical interface for nrsc5.")
@@ -952,7 +953,7 @@ class NRSC5GUI(object):
                 window_x, window_y = self.main_window.get_position()
                 width, height = self.main_window.get_size()
                 config = {
-                    "config_version": "1.2.0",
+                    "config_version": self.VERSION,
                     "window_x": window_x,
                     "window_y": window_y,
                     "width": width,
