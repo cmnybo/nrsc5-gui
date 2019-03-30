@@ -44,10 +44,10 @@ class NRSC5GUI(object):
     MAP_FILE = "map.png"
     VERSION = "2.0.0"
 
-    logLevel = 20  # decrease to 10 to enable debug logs
+    log_level = 20  # decrease to 10 to enable debug logs
 
     def __init__(self):
-        logging.basicConfig(level=self.logLevel,
+        logging.basicConfig(level=self.log_level,
                             format="%(asctime)s %(levelname)-5s %(filename)s:%(lineno)d: %(message)s",
                             datefmt="%H:%M:%S")
 
@@ -366,7 +366,7 @@ class NRSC5GUI(object):
         if btn.get_active():
             if btn == self.rad_map_traffic:
                 self.map_data["map_mode"] = 0
-                map_file = os.path.join("map", "TrafficMap.png")
+                map_file = os.path.join("map", "traffic_map.png")
                 if os.path.isfile(map_file):
                     map_img = Image.open(map_file).resize((200, 200), Image.LANCZOS)
                     self.img_map.set_from_pixbuf(img_to_pixbuf(map_img))
@@ -480,7 +480,7 @@ class NRSC5GUI(object):
             # check if all of the tiles are loaded
             if self.check_tiles(timestamp):
                 logging.debug("Got complete traffic map")
-                self.traffic_map.save(os.path.join("map", "TrafficMap.png"))
+                self.traffic_map.save(os.path.join("map", "traffic_map.png"))
 
                 # display on map page
                 if self.rad_map_traffic.get_active():
@@ -509,11 +509,11 @@ class NRSC5GUI(object):
             logging.debug("Got weather overlay")
 
             self.map_data["weather_time"] = timestamp
-            weather_map_path = os.path.join("map", "WeatherMap_{}_{}.png".format(map_id, timestamp))
+            weather_map_path = os.path.join("map", "weather_map_{}_{}.png".format(map_id, timestamp))
 
             # create weather map
             try:
-                map_path = os.path.join("map", "BaseMap_" + map_id + ".png")
+                map_path = os.path.join("map", "base_map_" + map_id + ".png")
                 if not os.path.isfile(map_path):
                     self.make_base_map(self.map_data["weather_id"], self.map_data["weather_pos"])
 
@@ -567,9 +567,9 @@ class NRSC5GUI(object):
 
     def process_weather_maps(self):
         number_of_maps = 0
-        regex = re.compile("^map.WeatherMap_([a-zA-Z0-9]+)_([0-9]+).png")
+        regex = re.compile("^map.weather_map_([a-zA-Z0-9]+)_([0-9]+).png")
         now = time.time()
-        files = glob.glob(os.path.join("map", "WeatherMap_") + "*.png")
+        files = glob.glob(os.path.join("map", "weather_map_") + "*.png")
         files.sort()
         for file in files:
             match = regex.match(file)
@@ -610,7 +610,7 @@ class NRSC5GUI(object):
 
     def make_base_map(self, map_id, pos):
         """crop the map to the area needed for weather radar"""
-        map_path = os.path.join("map", "BaseMap_" + map_id + ".png")
+        map_path = os.path.join("map", "base_map_" + map_id + ".png")
         if os.path.isfile(self.MAP_FILE):
             if not os.path.isfile(map_path):
                 logging.debug("Creating new map: %s", map_path)
@@ -1130,7 +1130,7 @@ class NRSC5Map(object):
 
     def set_map(self, map_type):
         if map_type == 0:
-            self.show_image(os.path.join("map", "TrafficMap.png"), False)
+            self.show_image(os.path.join("map", "traffic_map.png"), False)
         elif map_type == 1:
             self.show_image(self.data["weather_now"], self.config["scale"])
 

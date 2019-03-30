@@ -67,7 +67,7 @@ The default map used for the weather radar comes from [OpenStreetMap](https://ww
 You can replace the map.png image with a map from any website that will let you export map tiles.  
 The tiles used are (35,84) to (81,110) at zoom level 8. The image is 12032x6912 pixels.  
 The portion of the map used for your area is cached in the map directory.
-If you change the map image, you will have to delete the BaseMap images in the map directory so
+If you change the map image, you will have to delete the base_map images in the map directory so
 they will be recreated with the new map.
 
 ## Screenshots
