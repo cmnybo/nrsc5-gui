@@ -21,6 +21,7 @@ import glob
 import io
 import json
 import logging
+import math
 import os
 import queue
 import re
@@ -596,29 +597,27 @@ class NRSC5GUI(object):
 
         logging.debug("Found %s weather maps", number_of_maps)
 
-    def get_map_area(self, lat1, lon1, lat2, lon2):
-        """get pixel coordinates from latitude and longitude
-        calculations taken from https://github.com/KYDronePilot/hdfm"""
+    def map_image_coordinates(self, lat_degrees, lon_degrees):
+        """convert latitude & longitude to x & y cooordinates in the map"""
+        first_tile_x, first_tile_y = 35, 84
+        zoom_level = 8
+        tile_size = 256
 
-        from math import asinh, tan, radians
-
-        top = asinh(tan(radians(52.482780)))
-        lat1 = top - asinh(tan(radians(lat1)))
-        lat2 = top - asinh(tan(radians(lat2)))
-        x_1 = (lon1 + 130.781250) * 7162 / 39.34135
-        x_2 = (lon2 + 130.781250) * 7162 / 39.34135
-        y_1 = lat1 * 3565 / (top - asinh(tan(radians(38.898))))
-        y_2 = lat2 * 3565 / (top - asinh(tan(radians(38.898))))
-
-        return (int(round(x_1)), int(round(y_1)), int(round(x_2)), int(round(y_2)))
+        map_x = (1 + math.radians(lon_degrees) / math.pi) / 2
+        map_y = (1 - math.asinh(math.tan(math.radians(lat_degrees))) / math.pi) / 2
+        tile_x = map_x * (2**zoom_level) - first_tile_x
+        tile_y = map_y * (2**zoom_level) - first_tile_y
+        return int(round(tile_x * tile_size)), int(round(tile_y * tile_size))
 
     def make_base_map(self, map_id, pos):
+        """crop the map to the area needed for weather radar"""
         map_path = os.path.join("map", "BaseMap_" + map_id + ".png")
         if os.path.isfile(self.MAP_FILE):
             if not os.path.isfile(map_path):
                 logging.debug("Creating new map: %s", map_path)
-                map_area = self.get_map_area(*pos)
-                map_img = Image.open(self.MAP_FILE).crop(map_area)
+                map_upper_left = self.map_image_coordinates(pos[0], pos[1])
+                map_lower_right = self.map_image_coordinates(pos[2], pos[3])
+                map_img = Image.open(self.MAP_FILE).crop(map_upper_left + map_lower_right)
                 map_img.save(map_path)
                 logging.debug("Finished creating map")
         else:
