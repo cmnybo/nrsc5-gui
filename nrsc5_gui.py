@@ -26,7 +26,6 @@ import os
 import queue
 import re
 import sys
-import tempfile
 import threading
 import time
 from datetime import datetime, timezone
@@ -35,7 +34,7 @@ import pyaudio
 
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GObject, Gdk, GdkPixbuf
+from gi.repository import Gtk, GObject, Gdk, GdkPixbuf, GLib
 
 import nrsc5
 
@@ -1145,10 +1144,10 @@ class NRSC5Map(object):
 
 
 def img_to_pixbuf(img):
-    """convert PIL.Image to gdk.pixbuf"""
-    with tempfile.NamedTemporaryFile("wb", suffix=".png") as file:
-        img.save(file)
-        return GdkPixbuf.Pixbuf.new_from_file(file.name)
+    """convert PIL.Image to GdkPixbuf.Pixbuf"""
+    data = GLib.Bytes.new(img.tobytes())
+    return GdkPixbuf.Pixbuf.new_from_bytes(data, GdkPixbuf.Colorspace.RGB, 'A' in img.getbands(),
+                                           8, img.width, img.height, len(img.getbands())*img.width)
 
 
 if __name__ == "__main__":
