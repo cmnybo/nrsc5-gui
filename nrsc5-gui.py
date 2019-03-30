@@ -518,8 +518,8 @@ class NRSC5GUI(object):
                     self.make_base_map(self.map_data["weather_id"], self.map_data["weather_pos"])
 
                 img_map = Image.open(map_path).convert("RGBA")
-                timestamp_position = (img_map.size[0]-235, img_map.size[1]-29)
-                img_ts = self.make_timestamp(utc_time, img_map.size, timestamp_position)
+                timestamp_pos = (img_map.size[0]-235, img_map.size[1]-29)
+                img_ts = self.make_timestamp(utc_time.astimezone(), img_map.size, timestamp_pos)
                 img_radar = Image.open(io.BytesIO(data)).convert("RGBA")
                 img_radar = img_radar.resize(img_map.size, Image.LANCZOS)
                 img_map = Image.alpha_composite(img_map, img_radar)
@@ -633,10 +633,10 @@ class NRSC5GUI(object):
                     return False
         return True
 
-    def make_timestamp(self, utc_time, size, pos):
+    def make_timestamp(self, local_time, size, pos):
         """create a timestamp image to overlay on the weathermap"""
         pos_x, pos_y = pos
-        text = datetime.strftime(utc_time.astimezone(), "%Y-%m-%d %H:%M")
+        text = datetime.strftime(local_time, "%Y-%m-%d %H:%M")
         img_ts = Image.new("RGBA", size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(img_ts)
         font = ImageFont.truetype("DejaVuSansMono.ttf", 24)
