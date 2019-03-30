@@ -9,12 +9,12 @@ The folowing programs are required to run NRSC5-GUI
 * [Python 3](https://www.python.org/downloads/release)
 * [PyGObject](https://pygobject.readthedocs.io/en/latest/)
 * [Pillow](https://pillow.readthedocs.io/en/stable/)
-* [Python Dateutil](https://pypi.org/project/python-dateutil)
+* [PyAudio](https://people.csail.mit.edu/hubert/pyaudio/)
 * [nrsc5](https://github.com/theori-io/nrsc5)
 
 
 # Setup
-1. Install the latest version of Python 3, PyGObject, Pillow.
+1. Install the latest version of Python 3, PyGObject, Pillow and PyAudio.
 2. Compile and install nrsc5.
 3. Install nrsc5-gui files in a directory where you have write permissions.
 
@@ -22,19 +22,15 @@ The configuration files will be created in the same directory as nrsc5-gui.py.
 An aas directory will be created for downloaded files and a map directory will be created to
 store weather & traffic maps in.
 
-nrsc5 should be installed in a directory that is in your `$PATH` environment variable.  
-Otherwise you can edit line 41 of nrsc5-gui.py to provide a full path to nrsc5.
-
 # Usage
 Open the Settings tab and enter the frequency in MHz of the station you want to play.  
 Select the stream (1 is the main stream, some stations have additional streams).  
 Set the gain to Auto (you can specify the RF gain in dB in case auto doesn't work for your station).  
 You can enter a PPM correction value if your RTL-SDR dongle has an offset.  
 If you have more than one RTL-SDR dongle, you can enter the device number for the one you want to use.  
-Log to file can be enabled to write the debug information from nrsc5 to nrsc5.log.
 
 After setting your station, click the play button to start playing the station.  
-It will take about 10 seconds to begin playing if the signal stregth is good.  
+It will take about 10 seconds to begin playing if the signal strength is good.  
 Note: The settings cannot be changed while playing.
 
 ## Album Art & Track Info
@@ -84,5 +80,6 @@ they will be recreated with the new map.
 
 ## Version History
 1.0.0 Initial Release  
-1.0.1 Fixed compatibility with display scailing  
+1.0.1 Fixed compatibility with display scaling  
 1.1.0 Added weather radar and traffic map viewer  
+2.0.0 Updated to use the nrsc5 API
