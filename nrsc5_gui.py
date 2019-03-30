@@ -552,9 +552,9 @@ class NRSC5GUI(object):
                 weather_id = match.group(1)
 
             elif "Coordinates=" in line:
-                regex = re.compile(r"^Coordinates=.*\((-?\d+\.\d+),(-?\d+\.\d+)\).*\((-?\d+\.\d+),(-?\d+\.\d+)\).*$")
+                regex = re.compile(r"^Coordinates=.*\((.*),(.*)\).*\((.*),(.*)\).*$")
                 match = regex.match(line)
-                weather_pos = [float(match.group(1)), float(match.group(2)), float(match.group(3)), float(match.group(4))]
+                weather_pos = [float(match.group(i)) for i in range(1, 5)]
 
         if weather_id is not None and weather_pos is not None:
             if self.map_data["weather_id"] != weather_id or self.map_data["weather_pos"] != weather_pos:
