@@ -85,7 +85,7 @@ class NRSC5GUI(object):
                 "animate": False,
                 "scale": True,
                 "window_pos": (0, 0),
-                "window_size": (764, 632),
+                "window_size": (782, 632),
                 "animation_speed": 0.5
             }
         }
