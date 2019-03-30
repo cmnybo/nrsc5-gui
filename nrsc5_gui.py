@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 #    NRSC5 GUI - A graphical interface for nrsc5
 #    Copyright (C) 2017-2019  Cody Nybo & Clayton Smith
@@ -280,7 +279,7 @@ class NRSC5GUI(object):
         about_dialog.set_destroy_with_parent(True)
         about_dialog.set_name("NRSC5 GUI")
         about_dialog.set_version(self.VERSION)
-        about_dialog.set_copyright("Copyright \u00A9 2017-2019 Cody Nybo & Clayton Smith")
+        about_dialog.set_copyright("Copyright © 2017-2019 Cody Nybo & Clayton Smith")
         about_dialog.set_website("https://github.com/cmnybo/nrsc5-gui")
         about_dialog.set_comments("A graphical interface for nrsc5.")
         about_dialog.set_authors(authors)
