@@ -1,5 +1,5 @@
 NRSC5-GUI is a graphical interface for [nrsc5](https://github.com/theori-io/nrsc5).  
-It makes it easy to play your favorite FM HD radio stations using and RTL-SDR dongle.  
+It makes it easy to play your favorite FM HD radio stations using an RTL-SDR dongle.  
 It will also display weather radar and traffic maps if the radio station provides them.
 
 # Dependencies
