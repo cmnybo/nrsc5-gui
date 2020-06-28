@@ -3,6 +3,7 @@ import ctypes
 import enum
 import math
 import platform
+import socket
 
 
 class EventType(enum.Enum):
@@ -449,8 +450,20 @@ class NRSC5:
         NRSC5.libnrsc5.nrsc5_get_version(ctypes.byref(version))
         return version.value.decode()
 
-    def open(self, device_index, ppm_error):
-        result = NRSC5.libnrsc5.nrsc5_open(ctypes.byref(self.radio), device_index, ppm_error)
+    @staticmethod
+    def service_data_type_name(type):
+        name = ctypes.c_char_p()
+        NRSC5.libnrsc5.nrsc5_service_data_type_name(type.value, ctypes.byref(name))
+        return name.value.decode()
+
+    @staticmethod
+    def program_type_name(type):
+        name = ctypes.c_char_p()
+        NRSC5.libnrsc5.nrsc5_program_type_name(type.value, ctypes.byref(name))
+        return name.value.decode()
+
+    def open(self, device_index):
+        result = NRSC5.libnrsc5.nrsc5_open(ctypes.byref(self.radio), device_index)
         if result != 0:
             raise NRSC5Error("Failed to open RTL-SDR.")
         self._set_callback()
@@ -461,6 +474,13 @@ class NRSC5:
             raise NRSC5Error("Failed to open pipe.")
         self._set_callback()
 
+    def open_rtltcp(self, host, port):
+        s = socket.create_connection((host, port))
+        result = NRSC5.libnrsc5.nrsc5_open_rtltcp(ctypes.byref(self.radio), s.detach())
+        if result != 0:
+            raise NRSC5Error("Failed to open rtl_tcp.")
+        self._set_callback()
+
     def close(self):
         NRSC5.libnrsc5.nrsc5_close(self.radio)
 
@@ -469,6 +489,11 @@ class NRSC5:
 
     def stop(self):
         NRSC5.libnrsc5.nrsc5_stop(self.radio)
+
+    def set_freq_correction(self, ppm_error):
+        result = NRSC5.libnrsc5.nrsc5_set_freq_correction(self.radio, ppm_error)
+        if result != 0:
+            raise NRSC5Error("Failed to set frequency correction.")
 
     def get_frequency(self):
         frequency = ctypes.c_float()
