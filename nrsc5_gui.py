@@ -393,8 +393,9 @@ class NRSC5GUI(object):
 
     def play(self):
         self.radio = nrsc5.NRSC5(lambda type, evt: self.callback(type, evt))
-        self.radio.open(int(self.spin_rtl.get_value()), int(self.spin_ppm.get_value()))
+        self.radio.open(int(self.spin_rtl.get_value()))
         self.radio.set_auto_gain(self.cb_auto_gain.get_active())
+        self.radio.set_freq_correction(int(self.spin_ppm.get_value()))
 
         # set gain if auto gain is not selected
         if not self.cb_auto_gain.get_active():
