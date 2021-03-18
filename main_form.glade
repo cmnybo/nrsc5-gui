@@ -184,20 +184,22 @@
           <object class="GtkAlignment" id="alignmentFreq">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="halign">GTK_ALIGN_START</property>
             <property name="xscale">0</property>
             <property name="yscale">0</property>
             <child>
               <object class="GtkTable" id="tableFreq">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="n_columns">2</property>
+                <property name="n_columns">3</property>
+                <property name="column_spacing">3</property>
                 <child>
                   <object class="GtkLabel" id="lblFreq">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="xpad">10</property>
                     <property name="label" translatable="yes">Frequency</property>
-                    <property name="xalign">1</property>
+                    <property name="xalign">0</property>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -228,12 +230,27 @@
                     <property name="y_options">GTK_FILL</property>
                   </packing>
                 </child>
+                <child>
+                  <object class="GtkLabel" id="lbl_stat_info">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="hexpand">True</property>
+                    <property name="xpad">10</property>
+                    <property name="xalign">0</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">2</property>
+                    <property name="right_attach">3</property>
+                    <property name="x_options">GTK_FILL</property>
+                    <property name="y_options">GTK_FILL</property>
+                  </packing>
+                </child>
               </object>
             </child>
           </object>
           <packing>
             <property name="expand">False</property>
-            <property name="fill">True</property>
+            <property name="fill">False</property>
             <property name="padding">3</property>
             <property name="position">1</property>
           </packing>
@@ -328,18 +345,11 @@
                 <property name="label_xalign">0</property>
                 <property name="shadow_type">in</property>
                 <child>
-                  <!--object class="GtkAlignment" id="alignmentCover"-->
                   <object class="GtkScrolledWindow" id="alignment_cover">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <!--property name="top_padding">6</property-->
-                    <!--property name="bottom_padding">6</property-->
-                    <!--property name="left_padding">6</property-->
-                    <!--property name="right_padding">6</property-->
                     <child>
                       <object class="GtkImage" id="img_cover">
-                        <!--property name="width_request">200</property-->
-                        <!--property name="height_request">200</property-->
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="expand">TRUE</property>
@@ -1460,13 +1470,36 @@
             <property name="can_focus">False</property>
             <property name="n_columns">4</property>
             <child>
-              <object class="GtkLabel" id="lbl_callsign">
-                <property name="height_request">25</property>
+              <object class="GtkBox" id="pilot_box">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Station Callsign</property>
-                <property name="width_chars">7</property>
-                <property name="xalign">0</property>
+                <child>
+                  <object class="GtkImage" id="img_nosynch">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="pixbuf">nosynch.png</property>
+                    <property name="halign">GTK_ALIGN_START</property>
+                    <property name="tooltip_text" translatable="yes">Synchronization</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkImage" id="img_synchpilot">
+                    <property name="visible">False</property>
+                    <property name="can_focus">False</property>
+                    <property name="pixbuf">synchpilot.png</property>
+                    <property name="halign">GTK_ALIGN_START</property>
+                    <property name="tooltip_text" translatable="yes">Synchronization</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkImage" id="img_lostdevice">
+                    <property name="visible">False</property>
+                    <property name="can_focus">False</property>
+                    <property name="pixbuf">lostdevice.png</property>
+                    <property name="halign">GTK_ALIGN_START</property>
+                    <property name="tooltip_text" translatable="yes">Synchronization</property>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="y_options">GTK_FILL</property>

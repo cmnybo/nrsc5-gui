@@ -189,7 +189,6 @@ class NRSC5GUI(object):
 
             # update all of the spin buttons to prevent the text from sticking
             self.spin_freq.update()
-            #self.spin_stream.update()
             self.spin_gain.update()
             self.spin_ppm.update()
             self.spin_rtl.update()
@@ -212,14 +211,12 @@ class NRSC5GUI(object):
             self.play()
 
             self.station_str = str(self.spin_freq.get_value())
-            #self.stream_num = int(self.spin_stream.get_value())-1
             self.set_program_btns()
 
             self.display_logo()
 
             # check if station is bookmarked
             self.bookmarked = False
-            #freq = int((self.spin_freq.get_value()+0.005)*100) + int(self.spin_stream.get_value())
             freq = int((self.spin_freq.get_value()+0.005)*100) + self.stream_num + 1
             for bookmark in self.bookmarks:
                 if bookmark[2] == freq:
@@ -265,12 +262,10 @@ class NRSC5GUI(object):
 
     def on_btn_bookmark_clicked(self, _btn):
         # pack frequency and channel number into one int
-        #freq = int((self.spin_freq.get_value()+0.005)*100) + int(self.spin_stream.get_value())
         freq = int((self.spin_freq.get_value()+0.005)*100) + self.stream_num + 1
 
         # create bookmark
         bookmark = [
-            #"{:4.1f}-{:1.0f}".format(self.spin_freq.get_value(), self.spin_stream.get_value()),
             "{:4.1f}-{:1.0f}".format(self.spin_freq.get_value(), self.stream_num + 1),
             self.stream_info["callsign"],
             freq
@@ -286,7 +281,6 @@ class NRSC5GUI(object):
     def on_btn_delete_clicked(self, _btn):
         # select current station if not on bookmarks page
         if self.notebook_main.get_current_page() != 3:
-            #station = int((self.spin_freq.get_value()+0.005)*100) + int(self.spin_stream.get_value())
             station = int((self.spin_freq.get_value()+0.005)*100) + self.stream_num + 1
             for i in range(len(self.ls_bookmarks)):
                 if self.ls_bookmarks[i][2] == station:
@@ -362,7 +356,6 @@ class NRSC5GUI(object):
         self.about_dialog = about_dialog
         about_dialog.show()
 
-    #def on_spin_stream_value_changed(self, _spin):
     def on_stream_changed(self):
         self.last_xhdr = ""
         self.stream_info["title"] = ""
@@ -372,7 +365,6 @@ class NRSC5GUI(object):
         self.stream_info["cover"] = ""
         self.stream_info["logo"] = ""
         self.stream_info["bitrate"] = 0
-        #self.stream_num = int(self.spin_stream.get_value())-1
         self.set_program_btns()
         if self.playing:
             self.display_logo()
@@ -387,7 +379,6 @@ class NRSC5GUI(object):
     def on_program_select(self, _label, evt):
         stream_num = int(_label.get_property("name")[-1])
         self.update_btns = not (_label.get_property("name")[0] == "b")
-        #self.spin_stream.set_value(stream_num+1)
         self.stream_num = stream_num
         self.on_stream_changed()
 
@@ -403,7 +394,6 @@ class NRSC5GUI(object):
 
             # set frequency and stream
             self.spin_freq.set_value(float(int(station/10)/10.0))
-            #self.spin_stream.set_value(station % 10)
             self.stream_num = (station % 10)-1
             self.on_stream_changed()
 
@@ -493,6 +483,10 @@ class NRSC5GUI(object):
                 image_path = ""
                 image = ""
                 ber = [self.stream_info["ber"][i]*100 for i in range(4)]
+                stat_info = self.stream_info["callsign"]
+                if (self.stream_info["slogan"].strip() != ""):
+                    stat_info = stat_info + " - " + self.stream_info["slogan"].strip()
+                self.lbl_stat_info.set_text(stat_info)
                 self.txt_title.set_text(self.stream_info["title"])
                 self.txt_artist.set_text(self.stream_info["artist"])
                 self.txt_album.set_text(self.stream_info["album"])
@@ -500,7 +494,7 @@ class NRSC5GUI(object):
                 self.lbl_bitrate.set_label("{:3.1f} kbps".format(self.stream_info["bitrate"]))
                 self.lbl_bitrate2.set_label("{:3.1f} kbps".format(self.stream_info["bitrate"]))
                 self.lbl_error.set_label("{:2.2f}% Error ".format(ber[1]))
-                self.lbl_callsign.set_label(" " + self.stream_info["callsign"])
+                #self.lbl_callsign.set_label(" " + self.stream_info["callsign"])
                 self.lbl_name.set_label(self.stream_info["callsign"])
                 self.lbl_slogan.set_label(self.stream_info["slogan"])
                 self.lbl_slogan.set_tooltip_text(self.stream_info["slogan"])
@@ -815,14 +809,22 @@ class NRSC5GUI(object):
             if cber > ber[3]:
                 ber[3] = cber
 
+    def set_pilot_img(self, filename):
+        self.img_nosynch.set_visible(filename == "nosynch")
+        self.img_synchpilot.set_visible(filename == "synchpilot")
+        self.img_lostdevice.set_visible(filename == "lostdevice")
+
     def callback(self, evt_type, evt):
         if evt_type == nrsc5.EventType.LOST_DEVICE:
-            pass  # TODO: update the GUI?
+            self.set_pilot_img("lostdevice")
+            #pass  # TODO: update the GUI?
         elif evt_type == nrsc5.EventType.SYNC:
+            self.set_pilot_img("synchpilot")
             self.stream_info["gain"] = self.radio.get_gain()
             # TODO: update the GUI?
         elif evt_type == nrsc5.EventType.LOST_SYNC:
-            pass  # TODO: update the GUI?
+            self.set_pilot_img("nosynch")
+            #pass  # TODO: update the GUI?
         elif evt_type == nrsc5.EventType.MER:
             self.stream_info["mer"] = [evt.lower, evt.upper]
         elif evt_type == nrsc5.EventType.BER:
@@ -930,7 +932,7 @@ class NRSC5GUI(object):
         self.img_cover = builder.get_object("img_cover")
         self.img_map = builder.get_object("img_map")
         self.spin_freq = builder.get_object("spin_freq")
-        #self.spin_stream = builder.get_object("spin_stream")
+        self.lbl_stat_info = builder.get_object("lbl_stat_info")
         self.spin_gain = builder.get_object("spin_gain")
         self.spin_ppm = builder.get_object("spin_ppm")
         self.spin_rtl = builder.get_object("spin_rtl")
@@ -965,7 +967,10 @@ class NRSC5GUI(object):
         self.lbl_data_svcs1 = builder.get_object("lbl_data_svcs1")
         self.lbl_data_svcs2 = builder.get_object("lbl_data_svcs2")
         self.lbl_data_svcs3 = builder.get_object("lbl_data_svcs3")
-        self.lbl_callsign = builder.get_object("lbl_callsign")
+        #self.lbl_callsign = builder.get_object("lbl_callsign")
+        self.img_nosynch = builder.get_object("img_nosynch")
+        self.img_synchpilot = builder.get_object("img_synchpilot")
+        self.img_lostdevice = builder.get_object("img_lostdevice")
         self.lbl_gain = builder.get_object("lbl_gain")
         self.lbl_bitrate = builder.get_object("lbl_bitrate")
         self.lbl_bitrate2 = builder.get_object("lbl_bitrate2")
@@ -1010,7 +1015,8 @@ class NRSC5GUI(object):
         self.weather_port = -1
 
         # clear status info
-        self.lbl_callsign.set_label("")
+        self.lbl_stat_info.set_label(" ")
+        #self.lbl_callsign.set_label("")
         self.lbl_bitrate.set_label("")
         self.lbl_bitrate2.set_label("")
         self.lbl_error.set_label("")
@@ -1048,6 +1054,7 @@ class NRSC5GUI(object):
         self.lbl_ber_avg.set_label("")
         self.lbl_ber_min.set_label("")
         self.lbl_ber_max.set_label("")
+        self.set_pilot_img("nosynch")
 
     def load_settings(self):
         try:
@@ -1075,7 +1082,6 @@ class NRSC5GUI(object):
 
                 self.main_window.move(config["window_x"], config["window_y"])
                 self.spin_freq.set_value(config["frequency"])
-                #self.spin_stream.set_value(config["stream"])
                 self.stream_num = int(config["stream"])-1
                 self.on_stream_changed()
                 self.spin_gain.set_value(config["gain"])
@@ -1145,7 +1151,6 @@ class NRSC5GUI(object):
                     "width": width,
                     "height": height,
                     "frequency": self.spin_freq.get_value(),
-                    #"stream": int(self.spin_stream.get_value()),
                     "stream": int(self.stream_num)+1,
                     "gain": self.spin_gain.get_value(),
                     "auto_gain": self.cb_auto_gain.get_active(),

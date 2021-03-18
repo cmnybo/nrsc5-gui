@@ -47,6 +47,7 @@ class MIMEType(enum.Enum):
     TTN_TPEG_3 = 0x52103469
     TTN_STM_TRAFFIC = 0xFF8422D7
     TTN_STM_WEATHER = 0xEF042E96
+    TEST_STR_E = 0xB81FFAA8
 
 
 class Access(enum.Enum):
@@ -73,6 +74,7 @@ class ServiceDataType(enum.Enum):
     SERVICE_MAINTENANCE = 263
     HD_RADIO_SYSTEM_SERVICES = 264
     AUDIO_RELATED_DATA = 265
+    TEST_STR_E = 511
 
 
 class ProgramType(enum.Enum):
