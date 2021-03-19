@@ -176,7 +176,6 @@ class NRSC5GUI(object):
                 img_size = min(self.alignment_cover.get_allocated_height(), self.alignment_cover.get_allocated_width()) - 12
                 pixbuf = GdkPixbuf.Pixbuf.new_from_file(logo)
                 self.cover_img = logo
-                #pixbuf = pixbuf.scale_simple(200, 200, GdkPixbuf.InterpType.HYPER)
                 pixbuf = pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
                 self.img_cover.set_from_pixbuf(pixbuf)
         else:
@@ -484,8 +483,8 @@ class NRSC5GUI(object):
                 image = ""
                 ber = [self.stream_info["ber"][i]*100 for i in range(4)]
                 stat_info = self.stream_info["callsign"]
-                if (self.stream_info["slogan"].strip() != ""):
-                    stat_info = stat_info + " - " + self.stream_info["slogan"].strip()
+                #if (self.stream_info["slogan"].strip() != ""):
+                #    stat_info = stat_info + " - " + self.stream_info["slogan"].strip()
                 self.lbl_stat_info.set_text(stat_info)
                 self.txt_title.set_text(self.stream_info["title"])
                 self.txt_artist.set_text(self.stream_info["artist"])
@@ -494,7 +493,6 @@ class NRSC5GUI(object):
                 self.lbl_bitrate.set_label("{:3.1f} kbps".format(self.stream_info["bitrate"]))
                 self.lbl_bitrate2.set_label("{:3.1f} kbps".format(self.stream_info["bitrate"]))
                 self.lbl_error.set_label("{:2.2f}% Error ".format(ber[1]))
-                #self.lbl_callsign.set_label(" " + self.stream_info["callsign"])
                 self.lbl_name.set_label(self.stream_info["callsign"])
                 self.lbl_slogan.set_label(self.stream_info["slogan"])
                 self.lbl_slogan.set_tooltip_text(self.stream_info["slogan"])
@@ -502,14 +500,10 @@ class NRSC5GUI(object):
                 self.lbl_message.set_tooltip_text(self.stream_info["message"])
                 self.lbl_alert.set_label(self.stream_info["alert"])
                 self.lbl_alert.set_tooltip_text(self.stream_info["alert"])
-                self.btn_audio_prgs0.set_label(self.stream_info["name"][0])
-                #self.btn_audio_prgs0.set_tooltip_text(self.stream_info["name"][0])
-                self.btn_audio_prgs1.set_label(self.stream_info["name"][1])
-                #self.btn_audio_prgs1.set_tooltip_text(self.stream_info["name"][1])
-                self.btn_audio_prgs2.set_label(self.stream_info["name"][2])
-                #self.btn_audio_prgs2.set_tooltip_text(self.stream_info["name"][2])
-                self.btn_audio_prgs3.set_label(self.stream_info["name"][3])
-                #self.btn_audio_prgs3.set_tooltip_text(self.stream_info["name"][3])
+                self.btn_audio_lbl0.set_label(self.stream_info["name"][0])
+                self.btn_audio_lbl1.set_label(self.stream_info["name"][1])
+                self.btn_audio_lbl2.set_label(self.stream_info["name"][2])
+                self.btn_audio_lbl3.set_label(self.stream_info["name"][3])
                 self.lbl_audio_prgs0.set_label(self.stream_info["name"][0])
                 self.lbl_audio_prgs0.set_tooltip_text(self.stream_info["name"][0])
                 self.lbl_audio_prgs1.set_label(self.stream_info["name"][1])
@@ -534,6 +528,14 @@ class NRSC5GUI(object):
                 self.lbl_data_svcs2.set_tooltip_text(self.stream_info["data"][2])
                 self.lbl_data_svcs3.set_label(self.stream_info["data"][3])
                 self.lbl_data_svcs3.set_tooltip_text(self.stream_info["data"][3])
+                self.lbl_data_svcs10.set_label(self.stream_info["data_type"][0])
+                self.lbl_data_svcs10.set_tooltip_text(self.stream_info["data_type"][0])
+                self.lbl_data_svcs11.set_label(self.stream_info["data_type"][1])
+                self.lbl_data_svcs11.set_tooltip_text(self.stream_info["data_type"][1])
+                self.lbl_data_svcs12.set_label(self.stream_info["data_type"][2])
+                self.lbl_data_svcs12.set_tooltip_text(self.stream_info["data_type"][2])
+                self.lbl_data_svcs13.set_label(self.stream_info["data_type"][3])
+                self.lbl_data_svcs13.set_tooltip_text(self.stream_info["data_type"][3])
                 self.lbl_mer_lower.set_label("{:1.2f} dB".format(self.stream_info["mer"][0]))
                 self.lbl_mer_upper.set_label("{:1.2f} dB".format(self.stream_info["mer"][1]))
                 self.lbl_ber_now.set_label("{:1.3f}% (Now)".format(ber[0]))
@@ -563,7 +565,6 @@ class NRSC5GUI(object):
                     img_size = min(self.alignment_cover.get_allocated_height(), self.alignment_cover.get_allocated_width()) - 12
                     pixbuf = GdkPixbuf.Pixbuf.new_from_file(image_path)
                     self.cover_img = image_path
-                    #pixbuf = pixbuf.scale_simple(200, 200, GdkPixbuf.InterpType.HYPER)
                     pixbuf = pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
                     self.img_cover.set_from_pixbuf(pixbuf)
                     logging.debug("Image changed")
@@ -817,14 +818,11 @@ class NRSC5GUI(object):
     def callback(self, evt_type, evt):
         if evt_type == nrsc5.EventType.LOST_DEVICE:
             self.set_pilot_img("lostdevice")
-            #pass  # TODO: update the GUI?
         elif evt_type == nrsc5.EventType.SYNC:
             self.set_pilot_img("synchpilot")
             self.stream_info["gain"] = self.radio.get_gain()
-            # TODO: update the GUI?
         elif evt_type == nrsc5.EventType.LOST_SYNC:
             self.set_pilot_img("nosynch")
-            #pass  # TODO: update the GUI?
         elif evt_type == nrsc5.EventType.MER:
             self.stream_info["mer"] = [evt.lower, evt.upper]
         elif evt_type == nrsc5.EventType.BER:
@@ -861,12 +859,15 @@ class NRSC5GUI(object):
                             elif component.data.mime == nrsc5.MIMEType.STATION_LOGO:
                                 self.streams[service.number-1]["logo"] = component.data.port
                 elif service.type == nrsc5.ServiceType.DATA:
+                    self.stream_info["data"][self.stream_info["num_data"]] = service.name
                     for component in service.components:
                         if component.type == nrsc5.ComponentType.DATA:
+                            self.stream_info["data_type"][self.stream_info["num_data"]] = nrsc5.NRSC5.service_data_type_name(component.data.service_data_type)
                             if component.data.mime == nrsc5.MIMEType.TTN_STM_TRAFFIC:
                                 self.traffic_port = component.data.port
                             elif component.data.mime == nrsc5.MIMEType.TTN_STM_WEATHER:
                                 self.weather_port = component.data.port
+                    self.stream_info["num_data"] += 1 
         elif evt_type == nrsc5.EventType.LOT:
             logging.debug("LOT port=%s", evt.port)
 
@@ -907,11 +908,8 @@ class NRSC5GUI(object):
             if evt.alert:
                 self.stream_info["alert"] = evt.alert
             if evt.audio_services:
-                for i, audio_svc in enumerate(evt.audio_services):
-                    self.stream_info["program"][i] = nrsc5.NRSC5.program_type_name(audio_svc.type)
-            if evt.data_services:
-                for i, data_svc in enumerate(evt.data_services):
-                    self.stream_info["data"][i] = nrsc5.NRSC5.service_data_type_name(data_svc.type)
+                for audio_svc in evt.audio_services:
+                    self.stream_info["program"][audio_svc.program] = nrsc5.NRSC5.program_type_name(audio_svc.type)
 
 
     def get_controls(self):
@@ -955,6 +953,10 @@ class NRSC5GUI(object):
         self.btn_audio_prgs1 = builder.get_object("btn_audio_prgs1")
         self.btn_audio_prgs2 = builder.get_object("btn_audio_prgs2")
         self.btn_audio_prgs3 = builder.get_object("btn_audio_prgs3")
+        self.btn_audio_lbl0 = builder.get_object("btn_audio_lbl0")
+        self.btn_audio_lbl1 = builder.get_object("btn_audio_lbl1")
+        self.btn_audio_lbl2 = builder.get_object("btn_audio_lbl2")
+        self.btn_audio_lbl3 = builder.get_object("btn_audio_lbl3")
         self.lbl_audio_prgs0 = builder.get_object("lbl_audio_prgs0")
         self.lbl_audio_prgs1 = builder.get_object("lbl_audio_prgs1")
         self.lbl_audio_prgs2 = builder.get_object("lbl_audio_prgs2")
@@ -967,7 +969,10 @@ class NRSC5GUI(object):
         self.lbl_data_svcs1 = builder.get_object("lbl_data_svcs1")
         self.lbl_data_svcs2 = builder.get_object("lbl_data_svcs2")
         self.lbl_data_svcs3 = builder.get_object("lbl_data_svcs3")
-        #self.lbl_callsign = builder.get_object("lbl_callsign")
+        self.lbl_data_svcs10 = builder.get_object("lbl_data_svcs10")
+        self.lbl_data_svcs11 = builder.get_object("lbl_data_svcs11")
+        self.lbl_data_svcs12 = builder.get_object("lbl_data_svcs12")
+        self.lbl_data_svcs13 = builder.get_object("lbl_data_svcs13")
         self.img_nosynch = builder.get_object("img_nosynch")
         self.img_synchpilot = builder.get_object("img_synchpilot")
         self.img_lostdevice = builder.get_object("img_lostdevice")
@@ -1001,9 +1006,12 @@ class NRSC5GUI(object):
             "artist": "",
             "cover": "",
             "logo": "",
+            "num_audio": 0,
             "name": [" ", " ", " ", " "],
             "program": [" ", " ", " ", " "],
+            "num_data": 0,
             "data": [" ", " ", " ", " "],
+            "data_type": [" ", " ", " ", " "],
             "bitrate": 0,
             "mer": [0, 0],
             "ber": [0, 0, 0, 0],
@@ -1016,7 +1024,6 @@ class NRSC5GUI(object):
 
         # clear status info
         self.lbl_stat_info.set_label(" ")
-        #self.lbl_callsign.set_label("")
         self.lbl_bitrate.set_label("")
         self.lbl_bitrate2.set_label("")
         self.lbl_error.set_label("")
@@ -1031,10 +1038,10 @@ class NRSC5GUI(object):
         self.lbl_slogan.set_label("")
         self.lbl_message.set_label("")
         self.lbl_alert.set_label("")
-        self.btn_audio_prgs0.set_label("")
-        self.btn_audio_prgs1.set_label("")
-        self.btn_audio_prgs2.set_label("")
-        self.btn_audio_prgs3.set_label("")
+        self.btn_audio_lbl0.set_label("")
+        self.btn_audio_lbl1.set_label("")
+        self.btn_audio_lbl2.set_label("")
+        self.btn_audio_lbl3.set_label("")
         self.lbl_audio_prgs0.set_label("")
         self.lbl_audio_prgs1.set_label("")
         self.lbl_audio_prgs2.set_label("")
@@ -1047,6 +1054,10 @@ class NRSC5GUI(object):
         self.lbl_data_svcs1.set_label("")
         self.lbl_data_svcs2.set_label("")
         self.lbl_data_svcs3.set_label("")
+        self.lbl_data_svcs10.set_label("")
+        self.lbl_data_svcs11.set_label("")
+        self.lbl_data_svcs12.set_label("")
+        self.lbl_data_svcs13.set_label("")
         self.lbl_slogan.set_tooltip_text("")
         self.lbl_mer_lower.set_label("")
         self.lbl_mer_upper.set_label("")
