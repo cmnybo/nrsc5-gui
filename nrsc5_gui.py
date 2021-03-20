@@ -160,12 +160,27 @@ class NRSC5GUI(object):
 
         self.audio_thread.start()
 
-    def on_cover_resize(self, container, image_widget):
+    def on_cover_resize(self, container):
         if self.cover_img != "":
             img_size = min(self.alignment_cover.get_allocated_height(), self.alignment_cover.get_allocated_width()) - 12
             pixbuf = GdkPixbuf.Pixbuf.new_from_file(self.cover_img)
             pixbuf = pixbuf.scale_simple(img_size, img_size, GdkPixbuf.InterpType.BILINEAR)
-            image_widget.set_from_pixbuf(pixbuf)
+            self.img_cover.set_from_pixbuf(pixbuf)
+
+        img_size = min(self.alignment_map.get_allocated_height(), self.alignment_map.get_allocated_width()) - 12           
+        if (self.map_data["map_mode"] == 0):
+            map_file = os.path.join("map", "traffic_map.png")
+            if os.path.isfile(map_file):
+                map_img = Image.open(map_file).resize((img_size, img_size), Image.LANCZOS)
+                self.img_map.set_from_pixbuf(img_to_pixbuf(map_img))
+            else:
+                self.img_map.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)
+        elif (self.map_data["map_mode"] == 1):
+            if os.path.isfile(self.map_data["weather_now"]):
+                map_img = Image.open(self.map_data["weather_now"]).resize((img_size, img_size), Image.LANCZOS)
+                self.img_map.set_from_pixbuf(img_to_pixbuf(map_img))
+            else:
+                self.img_map.set_from_stock(Gtk.STOCK_MISSING_IMAGE, Gtk.IconSize.LARGE_TOOLBAR)
 
     def display_logo(self):
         if self.station_str in self.station_logos:
@@ -602,7 +617,9 @@ class NRSC5GUI(object):
 
                 # display on map page
                 if self.rad_map_traffic.get_active():
-                    img_map = self.traffic_map.resize((200, 200), Image.LANCZOS)
+                    img_size = min(self.alignment_map.get_allocated_height(), self.alignment_map.get_allocated_width()) - 12
+                    #img_map = self.traffic_map.resize((200, 200), Image.LANCZOS)
+                    img_map = self.traffic_map.resize((img_size, img_size), Image.LANCZOS)
                     self.img_map.set_from_pixbuf(img_to_pixbuf(img_map))
 
                 if self.map_viewer is not None:
@@ -647,7 +664,9 @@ class NRSC5GUI(object):
 
                 # display on map page
                 if self.rad_map_weather.get_active():
-                    img_map = img_map.resize((200, 200), Image.LANCZOS)
+                    img_size = min(self.alignment_map.get_allocated_height(), self.alignment_map.get_allocated_width()) - 12
+                    #img_map = img_map.resize((200, 200), Image.LANCZOS)
+                    img_map = img_map.resize((img_size, img_size), Image.LANCZOS)
                     self.img_map.set_from_pixbuf(img_to_pixbuf(img_map))
 
                 self.process_weather_maps()  # get rid of old maps and add new ones to the list
@@ -928,6 +947,7 @@ class NRSC5GUI(object):
         self.notebook_main = builder.get_object("notebook_main")
         self.alignment_cover = builder.get_object("alignment_cover")
         self.img_cover = builder.get_object("img_cover")
+        self.alignment_map = builder.get_object("alignment_map")
         self.img_map = builder.get_object("img_map")
         self.spin_freq = builder.get_object("spin_freq")
         self.lbl_stat_info = builder.get_object("lbl_stat_info")
@@ -992,7 +1012,7 @@ class NRSC5GUI(object):
         self.lv_bookmarks.set_model(self.ls_bookmarks)
         self.lv_bookmarks.get_selection().connect("changed", self.on_lv_bookmarks_sel_changed)
 
-        self.main_window.connect("check-resize", self.on_cover_resize, self.img_cover)
+        self.main_window.connect("check-resize", self.on_cover_resize)
 
     def init_stream_info(self):
         self.stream_info = {
