@@ -507,7 +507,7 @@ class NRSC5GUI(object):
                 self.txt_genre.set_text(self.stream_info["genre"])
                 self.lbl_bitrate.set_label("{:3.1f} kbps".format(self.stream_info["bitrate"]))
                 self.lbl_bitrate2.set_label("{:3.1f} kbps".format(self.stream_info["bitrate"]))
-                self.lbl_error.set_label("{:2.2f}% Error ".format(ber[1]))
+                self.lbl_error.set_label("{:2.2f}% Error ".format(ber[0]))
                 self.lbl_name.set_label(self.stream_info["callsign"])
                 self.lbl_slogan.set_label(self.stream_info["slogan"])
                 self.lbl_slogan.set_tooltip_text(self.stream_info["slogan"])
@@ -872,6 +872,8 @@ class NRSC5GUI(object):
                 if service.type == nrsc5.ServiceType.AUDIO:
                     self.stream_info["name"][service.number-1] = service.name
                     for component in service.components:
+                        if component.type == nrsc5.ComponentType.AUDIO:
+                            self.stream_info["program"][service.number-1] = nrsc5.NRSC5.program_type_name(component.audio.type)
                         if component.type == nrsc5.ComponentType.DATA:
                             if component.data.mime == nrsc5.MIMEType.PRIMARY_IMAGE:
                                 self.streams[service.number-1]["image"] = component.data.port
@@ -926,10 +928,6 @@ class NRSC5GUI(object):
                 self.stream_info["message"] = evt.message
             if evt.alert:
                 self.stream_info["alert"] = evt.alert
-            if evt.audio_services:
-                for audio_svc in evt.audio_services:
-                    self.stream_info["program"][audio_svc.program] = nrsc5.NRSC5.program_type_name(audio_svc.type)
-
 
     def get_controls(self):
         # setup gui
